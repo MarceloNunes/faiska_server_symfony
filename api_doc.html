@@ -5,12 +5,13 @@
     <title>Faiska RESTful API Documentation</title>
     <style>
         body { font-family: Calibri, sans-serif; padding: 20px;}
-        table { border-collapse: collapse; border: 1px solid #CCC; }
-        th, td { vertical-align: top; border: 1px solid #CCC; padding: 10px; }
+        table { border-collapse: collapse; border: 1px solid #CCC; max-width: 1000px; }
+        th, td { width: 100%; vertical-align: top; border: 1px solid #CCC; padding: 10px; }
         th { width: 1px }
-        tt {font-family:'Lucida Console', monospace; background-color: #F8F8F8;
+        .code {font-family:'Lucida Console', monospace; background-color: #F8F8F8;
             padding: 5px;}
         pre {font-family:'Lucida Console', monospace; background-color: #F8F8F8;}
+        a, a:hover, a:visited { text-decoration: none; }
         tr:nth-child(even) {background: #F8F8F8; }
         tr:nth-child(odd) {background: #F4F4F4; }
     </style>
@@ -18,9 +19,29 @@
 <body>
     <h1>Faiska RESTful API Documentation</h1>
 
-    <h2>Login/User Authentication</h2>
+    <h2>Sumary</h2>
+    <h3>Login and user operations</h3>
+    <ul>
 
-    <ul><table>
+        <li><a href="#login">Login/User Authentication</a> </li>
+        <li><a href="#create_user">Create user</a> </li>
+        <li><a href="#update_user">Update user</a> </li>
+        <li><a href="#patch_user">Update user's specific fields</a> </li>
+        <li><a href="#change_password">Change a user's password</a> </li>
+        <li><a href="#delete_user">Delete user</a> </li>
+        <li><a href="#get_user">Get user</a> </li>
+        <li><a href="#list_users">List users</a> </li>
+
+        <!--
+            <li><a href="#list_all_sessions">List all sessions</a> </li>
+            <li><a href="#list_users_sessions">List user's sessions</a> </li>
+        -->
+    </ul>
+    <hr>
+
+    <h2 id="login">Login/User Authentication</h2>
+
+    <table>
         <tr>
             <th>Description</th>
             <td>
@@ -31,7 +52,7 @@
         </tr>
         <tr>
             <th>URL</th>
-            <td><tt>/login</tt></td>
+            <td><span class="code">/login</span></td>
         </tr>
         <tr>
             <th>Method</th>
@@ -63,32 +84,29 @@
             <th>Error response</th>
             <td>
                 Status: <strong>400 - Bad Request</strong> - Mandatory fields not informed
-                <br/><br/>
-                Status: <strong>422 - Unprocessable Entity</strong> - Login error
-
                 <pre>
 {
     "column" : [String]
 }</pre>
-                <b>Example 1: Status 400</b> (email not informed)
+
+
+                 <b>Example 1: </b>
 
                 <pre>
 {
     "column" : "email",
 }</pre>
-                <b>Example 2: Status 422</b> (login error - email and/or password invalid)
+                Status: <strong>422 - Unprocessable Entity</strong> - Login error
 
-                <pre>{}</pre>
             </td>
         </tr>
     </table>
-    </ul>
 
-    <!-- --------------------------------------------------------------- -->
+    <p><a href="#">Back to top</a></p>
 
-    <h2>Create user</h2>
+    <h2 id="create_user">Create user</h2>
 
-    <ul><table>
+    <table>
         <tr>
             <th>Description</th>
             <td>
@@ -101,7 +119,7 @@
         </tr>
         <tr>
             <th>URL</th>
-            <td><tt>/user</tt></td>
+            <td><span class="code">/user</span></td>
         </tr>
         <tr>
             <th>Method</th>
@@ -109,6 +127,7 @@
         </tr>
         <tr>
             <th>URL Parameters</th>
+            <td>None</td>
         </tr>
         <tr>
             <th>Data Parameters</th>
@@ -119,13 +138,14 @@
     "password2" : [String] (mandatory)
     "email" : [String] (mandatory)
     "name" : [String] (mandatory)
-    "admin" : [Boolean] (mandatory when sent by an admin user)</pre>
+    "admin" : [Boolean] (mandatory when sent by an admin user)
+}</pre>
             </td>
         </tr>
         <tr>
             <th>Success response</th>
             <td>
-                <strong> Status 200: OK</strong><br/>
+                <strong> Status 201: Created</strong><br/>
                 Returns the record that have been just inserted without the password
 
                 <pre>
@@ -164,10 +184,6 @@
                 <strong>Status 401 - Unathorized:</strong>
                 AUTH_KEY not informed, invalid or expired.<br/><br/>
 
-                <b>Example:</b>
-
-                <pre>{}</pre>
-
                 <strong>Status 422 - Unprocessable Entity:</strong>
                 E.g. email already in use.
 
@@ -183,7 +199,521 @@
             </td>
         </tr>
     </table>
-    </ul>
+
+    <p><a href="#">Back to top</a></p>
+
+    <h2 id="update_user">Update user</h2>
+
+    <table>
+        <tr>
+            <th>Description</th>
+            <td>
+                Updates user's data. A ordinary user can update his own data. An admin user can
+                update data from any user.
+            </td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td><span class="code">/user/:id</span></td>
+        </tr>
+        <tr>
+            <th>Method</th>
+            <td>PUT</td>
+        </tr>
+        <tr>
+            <th>URL Parameters</th>
+            <td>
+                None
+            </td>
+        </tr>
+        <tr>
+            <th>Data Parameters</th>
+            <td>
+            <pre>
+{
+    "email" : [String] (mandatory)
+    "name" : [String] (mandatory)
+    "admin" : [Boolean] (mandatory for admin users, forbidden for ordinary users)
+}</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Success response</th>
+            <td>
+                <strong> Status 201: Created</strong><br/>
+                Returns the record that have been just updated, without the password, with the new data
+
+                <pre>
+{
+    "id" : [Integer],
+    "email" : [String],
+    "name" : [String],
+    "admin" : [Boolean],
+    "creation_date" : [Datetime],
+    "sessions" : [HATEOAS]
+}</pre>
+                <b>Example:</b>
+                <pre>
+{
+    "id" : 1234,
+    "email" : "johndoe@johndoe.ca",
+    "name" : "John Doe",
+    "admin" : false,
+    "creation_date" : "Sat Jun 17 22:13:43 EDT 2017",
+    "sessions" : "https://localhost:8000/user/1234/sessions"
+}</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Error response</th>
+            <td>
+                <strong>Status 400 - Bad Request:</strong>
+                Mandatory fields not informed<br/><br/>
+
+                <b>Example 1:</b> (email not informed)
+
+                <pre>
+{
+    "column" : "email",
+}</pre>
+                <strong>Status 404 - Not Found</strong><br/><br/>
+
+                <strong>Status 401 - Unathorized:</strong>
+                AUTH_KEY not informed, invalid or expired. Or an ordinary user tried
+                to edit data from another user.<br/><br/>
+
+                <strong>Status 422 - Unprocessable Entity:</strong>
+
+                <br/><br/>
+
+                <b>Example 3:</b> E-mail already in use by other user.
+
+                <pre>{
+    "column" : "email",
+    "message" : "E-mail already in use by other user"
+}</pre>
+
+                <b>Example 4:</b> Ordinary user tried to change his admin status.
+
+                <pre>{
+    "column" : "admin",
+    "message" : "Cannot change admin status."
+}</pre>
+            </td>
+        </tr>
+    </table>
+
+    <p><a href="#">Back to top</a></p>
+
+    <h2 id="patch_user">Update user's specific fields</h2>
+
+    <table>
+        <tr>
+            <th>Description</th>
+            <td>
+                Updates specific fields of a user's data. A ordinary user can update his
+                own data. An admin user can update data from any user.
+            </td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td><span class="code">/user/:id</span></td>
+        </tr>
+        <tr>
+            <th>Method</th>
+            <td>PATCH</td>
+        </tr>
+        <tr>
+            <th>URL Parameters</th>
+            <td>
+                None
+            </td>
+        </tr>
+        <tr>
+            <th>Data Parameters</th>
+            <td>
+            <pre>
+{
+    "email" : [String] (optional)
+    "name" : [String] (optional)
+    "admin" : [Boolean] (optional for admin users, forbidden for ordinary users)
+}</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Success response</th>
+            <td>
+                <strong> Status 201: Created</strong><br/>
+                Returns the record that have been just update, without the password and with the new data.
+
+                <pre>
+{
+    "id" : [Integer],
+    "email" : [String],
+    "name" : [String],
+    "admin" : [Boolean],
+    "creation_date" : [Datetime],
+    "sessions" : [HATEOAS]
+}</pre>
+                <b>Example:</b>
+                <pre>
+{
+    "id" : 1234,
+    "email" : "johndoe@johndoe.ca",
+    "name" : "John Doe",
+    "admin" : false,
+    "creation_date" : "Sat Jun 17 22:13:43 EDT 2017",
+    "sessions" : "https://localhost:8000/user/1234/sessions"
+}</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Error response</th>
+            <td>
+                <strong>Status 404 - Not Found</strong><br/><br/>
+
+                <strong>Status 400 - Bad Request:</strong>
+                At least one optional field must be informed.<br/><br/>
+
+
+                <strong>Status 401 - Unathorized:</strong>
+                AUTH_KEY not informed, invalid or expired. Or an ordinary user tried
+                to edit data from another user.<br/><br/>
+
+                <strong>Status 422 - Unprocessable Entity:</strong>
+
+                <br/><br/>
+
+                <b>Example 3:</b> E-mail already in use by other user.
+
+                <pre>{
+    "column" : "email",
+    "message" : "E-mail already in use by other user"
+}</pre>
+
+                <b>Example 4:</b> Ordinary user tried to change his admin status.
+
+                <pre>{
+    "column" : "admin",
+    "message" : "Cannot change admin status."
+}</pre>
+            </td>
+        </tr>
+    </table>
+
+    <p><a href="#">Back to top</a></p>
+
+    <h2 id="change_password">Change a user's password</h2>
+
+    <table>
+        <tr>
+            <th>Description</th>
+            <td>
+                Change a user's password. A ordinary user can change his own password.
+                An admin user can change the password from any user.
+            </td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td><span class="code">/user/:id/password</span></td>
+        </tr>
+        <tr>
+            <th>Method</th>
+            <td>PUT</td>
+        </tr>
+        <tr>
+            <th>URL Parameters</th>
+            <td>
+                None
+            </td>
+        </tr>
+        <tr>
+            <th>Data Parameters</th>
+            <td>
+            <pre>
+{
+    "old_password" : [String] (mandatory for ordinary users, ignored for admin users)
+    "password1"    : [String] (mandatory)
+    "password2"    : [String] (mandatory)
+}</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Success response</th>
+            <td>
+                <strong> Status 204: No Content</strong>
+                </td>
+        </tr>
+        <tr>
+            <th>Error response</th>
+            <td>
+                <strong>Status 400 - Bad Request:</strong>
+                Mandatory fields not informed<br/><br/>
+
+                <b>Example 1:</b> (password1 not informed)
+
+                <pre>
+{
+    "password1" : "email",
+}</pre>
+                <strong>Status 401 - Unathorized:</strong>
+                AUTH_KEY not informed, invalid or expired.<br/><br/>
+
+                <strong>Status 405 - Method not allowed:</strong>
+                Ordinary user tried to change the password from another user.<br/><br/>
+
+                <strong>Status 422 - Unprocessable Entity:</strong>
+
+                <br/><br/>
+
+                <b>Example 3:</b> Wrong old password
+
+                <pre>{
+    "column" : "old_password",
+    "message : "Wrong old password"
+}</pre>
+
+                <b>Example 4:</b> Invalid new password
+
+                <pre>{
+    "column" : "password1",
+    "message : "Invalid new password"
+}</pre>
+
+                <b>Example 5:</b> Passwords don't match
+
+                <pre>{
+    "column" : "password2",
+    "message : "Passwords don't match"
+}</pre>
+            </td>
+        </tr>
+    </table>
+
+    <p><a href="#">Back to top</a></p>
+
+    <h2 id="delete_user">Delete user</h2>
+
+    <table>
+        <tr>
+            <th>Description</th>
+            <td>
+                Delete a user. Only admin users can delete users other than himself.
+            </td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td><span class="code">/user/:id</span></td>
+        </tr>
+        <tr>
+            <th>Method</th>
+            <td>DELETE</td>
+        </tr>
+        <tr>
+            <th>URL Parameters</th>
+            <td>
+                None
+            </td>
+        </tr>
+        <tr>
+            <th>Data Parameters</th>
+            <td>
+                None
+            </td>
+        </tr>
+        <tr>
+            <th>Error response</th>
+            <td>
+                <strong>Status 404 - Not Found:</strong><br/><br/>
+
+                <strong>Status 401 - Unathorized:</strong>
+                AUTH_KEY not informed, invalid, expired or belongs to an ordinary user.<br/><br/>
+
+                <strong>Status 405 - Method not allowed:</strong>
+                Admin tried to delete himself<br/><br/>
+
+                <strong>Status 412 - Precondition falied:</strong>
+                Could not delete user due to foreign key restriction that can not be
+                deleted in cascade.<br/><br/>
+
+                (*) All errors return no response
+
+            </td>
+        </tr>
+    </table>
+
+    <p><a href="#">Back to top</a></p>
+
+    <h2 id="get_user">Get user</h2>
+
+    <table>
+        <tr>
+            <th>Description</th>
+            <td>
+                Gets user information. ordinary users can only get their own user information, admin users can
+                get information from any user.
+            </td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td><span class="code">/user/:id</span></td>
+        </tr>
+        <tr>
+            <th>Method</th>
+            <td>GET</td>
+        </tr>
+        <tr>
+            <th>URL Parameters</th>
+            <td>
+                None
+            </td>
+        </tr>
+        <tr>
+            <th>Data Parameters</th>
+            <td>
+                N/A
+            </td>
+        </tr>
+        <tr>
+            <th>Header Parameters</th>
+            <td><span class="code">AUTH_KEY</span></td>
+        </tr>
+        <tr>
+            <th>Success response</th>
+            <td>
+                <strong> Status 200: OK</strong><br/><br/>
+
+                <b>Example:</b>
+                <pre>
+{
+    "id" : 1234,
+    "email" : "johndoe@johndoe.ca",
+    "name" : "John Doe",
+    "admin" : false,
+    "creation_date" : "Sat Jun 17 22:13:43 EDT 2017",
+    "sessions" : "https://localhost:8000/user/1234/sessions"
+}</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Error response</th>
+            <td>
+                <strong>Status 404 - Not found:</strong>
+                <br/><br/>
+
+                <strong>Status 401 - Unathorized:</strong>
+                AUTH_KEY not informed, invalid or expired.<br><br>
+
+                <strong>Status 405 - Method not allowed:</strong>
+                Ordinary user tries to get information from other users.
+            </td>
+        </tr>
+    </table>
+
+    <p><a href="#">Back to top</a></p>
+
+    <h2 id="list_users">List users</h2>
+
+    <table>
+        <tr>
+            <th>Description</th>
+            <td>
+                List users information. This operation is only available for admin users.
+            </td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td><span class="code">/users</span></td>
+        </tr>
+        <tr>
+            <th>Method</th>
+            <td>GET</td>
+        </tr>
+        <tr>
+            <th>URL Parameters</th>
+            <td>
+                <pre>
+limit   : [Integer] (optional) (Defaults to 10)
+page    : [Integer] (optional) (Defaults to 1)
+offset  : [Integer] (optional) (Defaults to 0)
+orderby : [String] (optional) (Defaults to "id")
+                </pre>
+                If <span class="code">offset</span> and <span class="code">page</span> are informed at the same
+                request, <span class="code">offset</span> is ignored.<br><br>
+
+                Parameters are not validated. On <strong>Bad requests</strong>,
+                parameters are reset to their default value.<br><br>
+
+                <b>Example 1:</b> <span class="code">?offset=200&limit=100&orderby=name</span>
+                <br><br>
+                <b>Example 2:</b> <span class="code">?page=3&limit=50</span>
+            </td>
+        </tr>
+        <tr>
+            <th>Data Parameters</th>
+            <td>
+                N/A
+            </td>
+        </tr>
+        <tr>
+            <th>Header Parameters</th>
+            <td><span class="code">AUTH_KEY</span></td>
+        </tr>
+        <tr>
+            <th>Success response</th>
+            <td>
+                <strong> Status 200: OK</strong><br/><br/>
+
+                <b>Example:</b>
+                <pre>
+{
+    "metadata" : {
+        "count" : 150,
+        "limit" : 3,
+        "page" : 4,
+        "offset" : 9,
+        "orderby" : "name"
+    },
+    "data" : {
+        {
+            "id" : 11,
+            "email" : "curly@thestooges.com",
+            "name" : "Curly Howard",
+            "admin" : false,
+            "creation_date" : "Sat Jun 17 22:13:43 EDT 2017",
+            "sessions" : "https://localhost:8000/user/11/sessions"
+        },
+        {
+            "id" : 10,
+            "email" : "larry@thestooges.com",
+            "name" : "Larry Fine",
+            "admin" : false,
+            "creation_date" : "Sat Jun 17 22:13:43 EDT 2017",
+            "sessions" : "https://localhost:8000/user/10/sessions"
+        },
+        {
+            "id" : 12,
+            "email" : "moe@thestooges.com",
+            "name" : "Moe Howard",
+            "admin" : false,
+            "creation_date" : "Sat Jun 17 22:13:43 EDT 2017",
+            "sessions" : "https://localhost:8000/user/12/sessions"
+        }
+    }
+}</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Error response</th>
+            <td>
+                <strong>Status 401 - Unathorized:</strong>
+                AUTH_KEY not informed, invalid, expired or the session user is not
+                an admin user.
+            </td>
+        </tr>
+    </table>
+
+    <p><a href="#">Back to top</a></p>
 
 </body>
 </html>
