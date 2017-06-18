@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Faiska RESTful API Documentation</title>
+    <style>
+        body { font-family: Calibri, sans-serif; padding: 20px;}
+        table { border-collapse: collapse; border: 1px solid #CCC; }
+        th, td { vertical-align: top; border: 1px solid #CCC; padding: 10px; }
+        th { width: 1px }
+        tt {font-family:'Lucida Console', monospace; background-color: #F8F8F8;
+            padding: 5px;}
+        pre {font-family:'Lucida Console', monospace; background-color: #F8F8F8;}
+        tr:nth-child(even) {background: #F8F8F8; }
+        tr:nth-child(odd) {background: #F4F4F4; }
+    </style>
+</head>
+<body>
+    <h1>Faiska RESTful API Documentation</h1>
+
+    <h2>Login/User Authentication</h2>
+
+    <ul><table>
+        <tr>
+            <th>Description</th>
+            <td>
+                Gets an email and a password and returns an authentication key
+                stringthat may be passed on the header of all other calls of the
+                same session.
+            </td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td><tt>/login</tt></td>
+        </tr>
+        <tr>
+            <th>Method</th>
+            <td>POST</td>
+        </tr>
+        <tr>
+            <th>URL Parameters</th>
+            <td>None</td>
+        </tr>
+        <tr>
+            <th>Data Parameters</th>
+            <td>
+                <pre>
+"email" : [String] (mandatory),
+"password" : [String] (mandatory)</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Success response</th>
+            <td>
+                Status: <strong> 200 - OK</strong>
+                <pre>
+{
+    "AUTH_KEY" : [String]
+}</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Error response</th>
+            <td>
+                Status: <strong>400 - Bad Request</strong> - Mandatory fields not informed
+                <br/><br/>
+                Status: <strong>422 - Unprocessable Entity</strong> - Login error
+
+                <pre>
+{
+    "column" : [String]
+}</pre>
+                <b>Example 1: Status 400</b> (email not informed)
+
+                <pre>
+{
+    "column" : "email",
+}</pre>
+                <b>Example 2: Status 422</b> (login error - email and/or password invalid)
+
+                <pre>{}</pre>
+            </td>
+        </tr>
+    </table>
+    </ul>
+
+    <!-- --------------------------------------------------------------- -->
+
+    <h2>Create user</h2>
+
+    <ul><table>
+        <tr>
+            <th>Description</th>
+            <td>
+                Creates a new user. A new user can be created by an administrator
+                (AUTH_KEY references to an admin user)
+                or by a guest (no AUTH_KEY informed). The first user ever created
+                is an admin user. All other users created by guests are ordinary users.
+                Users created by admin users can be either admin or ordinary users.
+            </td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td><tt>/user</tt></td>
+        </tr>
+        <tr>
+            <th>Method</th>
+            <td>POST</td>
+        </tr>
+        <tr>
+            <th>URL Parameters</th>
+        </tr>
+        <tr>
+            <th>Data Parameters</th>
+            <td>
+            <pre>
+{
+    "password1" : [String] (mandatory)
+    "password2" : [String] (mandatory)
+    "email" : [String] (mandatory)
+    "name" : [String] (mandatory)
+    "admin" : [Boolean] (mandatory when sent by an admin user)</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Success response</th>
+            <td>
+                <strong> Status 200: OK</strong><br/>
+                Returns the record that have been just inserted without the password
+
+                <pre>
+{
+    "id" : [Integer],
+    "email" : [String],
+    "name" : [String],
+    "admin" : [Boolean],
+    "creation_date" : [Datetime],
+    "sessions" : [HATEOAS]
+}</pre>
+                <b>Example:</b>
+                <pre>
+{
+    "id" : 1234,
+    "email" : "johndoe@johndoe.ca",
+    "name" : "John Doe",
+    "admin" : false,
+    "creation_date" : "Sat Jun 17 22:13:43 EDT 2017",
+    "sessions" : "https://localhost:8000/user/1234/sessions"
+}</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Error response</th>
+            <td>
+                <strong>Status 400 - Bad Request:</strong>
+                Mandatory fields not informed<br/><br/>
+
+                <b>Example:</b> (email not informed)
+
+                <pre>
+{
+    "column" : "email",
+}</pre>
+                <strong>Status 401 - Unathorized:</strong>
+                AUTH_KEY not informed, invalid or expired.<br/><br/>
+
+                <b>Example:</b>
+
+                <pre>{}</pre>
+
+                <strong>Status 422 - Unprocessable Entity:</strong>
+                E.g. email already in use.
+
+                <br/><br/>
+
+
+                <b>Example 3:</b>
+
+                <pre>{
+    "column" : "email",
+    "message" : "E-mail already in use."
+}</pre>
+            </td>
+        </tr>
+    </table>
+    </ul>
+
+</body>
+</html>
