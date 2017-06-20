@@ -1,4 +1,4 @@
-Faiska (*fah-is-kah*) Server - Symfony version
+**Faiska** (*fah-is-kah*) Server - Symfony version
 ==============================================
 
 This is a PHP back-end project that showcases the use the **Symfony** framework. This project implements a RESTful API interface that server a basic login and user management. 
