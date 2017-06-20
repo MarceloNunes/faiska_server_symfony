@@ -173,12 +173,8 @@ class User
 
     public function toArray()
     {
-        return array(
-            'id' => $this->getId(),
-            'email' => $this->getEmail(),
-            'name' => $this->getName(),
-            'admin' => $this->getAdmin(),
-            'createdAt' => $this->getCreatedAt()
-        );
+        $result =  get_object_vars($this);
+        unset($result['password']);
+        return $result;
     }
 }

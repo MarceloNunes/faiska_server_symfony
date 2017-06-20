@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use Doctrine\ORM\Query\QueryException;
+use Doctrine\ORM\QueryBuilder;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,32 +17,50 @@ use Doctrine\Common\Persistence\ManagerRegistry;
 class UserController extends Controller
 {
     /**
+     * @param EntityManagerInterface $em
+     * @return integer
+     */
+    private function countUsers (EntityManagerInterface $em) {
+        $qb = $em
+            ->createQueryBuilder()
+            ->select('count(user.id)')
+            ->from('AppBundle:User','user');
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
      * @Route("/users")
      * @Method({"GET"})
      * @param EntityManagerInterface $em
      * @return JsonResponse
      */
-    function listUsersAction(EntityManagerInterface $em)
+    public function listUsersAction(EntityManagerInterface $em)
     {
         $response = new JsonResponse();
-        $paging  = new Helper\PagingParameters(array('id', 'name', 'email', 'created_at'));
-
-        $users = $em->getRepository('AppBundle:User')->findAll(
-            array(),
-            array(
-                $paging->getOrderBy() => $paging->getDirection()
-            ),
-            $paging->getLimit()
+        $params   = new Helper\BrowseParameters(
+            array('id', 'name', 'email', 'created_at'),
+            $this->countUsers($em)
         );
 
-        // TODO: Include Metadata
-        
-        $result = array();
+        $queryBuilder = $em->getRepository('AppBundle:User')
+            ->createQueryBuilder('user')
+            ->orderBy('user.'.$params->getOrderBy(), $params->getDirection())
+            ->setFirstResult($params->getOffset())
+            ->setMaxResults($params->getLimit());
 
-        /** @var Entity\User $user */
+        // TODO: Query by keywords
+
+        $users = $queryBuilder->getQuery()->getResult();
+        $data  = array();
+
         foreach ($users as $user) {
-            $result[] = $user->toArray();
+            $data[] = $user->toArray();
         }
+
+        $result = array(
+            'metadata' => $params->getMetadata(),
+            'data' => $data
+        );
 
         return $response->setContent($this->json($result));
     }
