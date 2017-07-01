@@ -2,17 +2,16 @@
 
 namespace AppBundle\Controller;
 
-use Doctrine\ORM\Query\QueryException;
-use Doctrine\ORM\QueryBuilder;
+use AppBundle\Controller\Helper\BrowseParameters;
+use AppBundle\Controller\Helper\Metadata;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use AppBundle\Entity;
+use AppBundle\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Common\Persistence\ManagerRegistry;
 
 class UserController extends Controller
 {
@@ -31,38 +30,34 @@ class UserController extends Controller
     /**
      * @Route("/users")
      * @Method({"GET"})
-     * @param EntityManagerInterface $em
+     * @param EntityManagerInterface $entityManager
      * @return JsonResponse
      */
-    public function listUsersAction(EntityManagerInterface $em)
+    public function listUsersAction(EntityManagerInterface $entityManager)
     {
-        $response = new JsonResponse();
-        $params   = new Helper\BrowseParameters(
-            array('id', 'name', 'email', 'created_at'),
-            $this->countUsers($em)
+        $response   = new JsonResponse();
+        $repository = new UserRepository($entityManager);
+
+        $parameters = new BrowseParameters(
+            Entity\User::CLASS_ALIAS,
+            Entity\User::ORDER_COLUMNS
         );
 
-        $queryBuilder = $em->getRepository('AppBundle:User')
-            ->createQueryBuilder('user')
-            ->orderBy('user.'.$params->getOrderBy(), $params->getDirection())
-            ->setFirstResult($params->getOffset())
-            ->setMaxResults($params->getLimit());
+        $parameters->setCount($repository->countByKeyword($parameters));
 
-        // TODO: Query by keywords
-
-        $users = $queryBuilder->getQuery()->getResult();
-        $data  = array();
+        $users      = $repository->browseByKeyword($parameters);
+        $data       = array();
 
         foreach ($users as $user) {
             $data[] = $user->toArray();
         }
 
-        $result = array(
-            'metadata' => $params->getMetadata(),
+        $content = array(
+            'metadata' => $parameters->getMetadata(),
             'data' => $data
         );
 
-        return $response->setContent($this->json($result));
+        return $response->setContent($this->json($content));
     }
 
     /**
@@ -77,7 +72,7 @@ class UserController extends Controller
         $response = new JsonResponse();
 
         /** @var Entity\User $user */
-        $user = $em->getRepository('AppBundle:User')->find($userId);
+        $user = $em->getRepository('AppBundle:UserRepository')->find($userId);
 
         if (!$user) {
             return $response->setStatusCode(Response::HTTP_NOT_FOUND);

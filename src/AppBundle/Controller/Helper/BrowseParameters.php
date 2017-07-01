@@ -3,7 +3,7 @@
 namespace AppBundle\Controller\Helper;
 
 use Symfony\Component\HttpFoundation\Request;
-use Doctrine\ORM\QueryBuilder;
+use AppBundle\Controller\Helper;
 
 class BrowseParameters
 {
@@ -12,7 +12,9 @@ class BrowseParameters
     const DEFAULT_LIMIT = 10;
     const DEFAULT_OFFSET = 0;
 
-    /** @var  Integer */
+    /** @var String */
+    private $classAlias;
+    /** @var Integer */
     private $limit;
     /** @var  Integer */
     private $offset;
@@ -32,10 +34,10 @@ class BrowseParameters
     private $validOrderColumns;
 
     /**
+     * @param string $classAlias
      * @param array $validOrderColumns
-     * @param int $count
      */
-    function __construct($validOrderColumns = null, $count = null)
+    function __construct($classAlias = null, $validOrderColumns = null)
     {
         $request = Request::createFromGlobals();
         $request->getPathInfo();
@@ -44,11 +46,11 @@ class BrowseParameters
         $this->setCurrentPage((int)$request->query->get('page'));
         $this->setOffset((int)$request->query->get('offset'));
 
+        $this->setClassAlias($classAlias);
         $this->setValidOrderColumns($validOrderColumns);
         $this->setOrderBy($request->query->get('orderby'));
 
         $this->setAscending(!(bool) $request->query->get('desc'));
-        $this->setCount((int) $count);
 
         $this->setKeywords($request->query->get('keywords'));
     }
@@ -85,10 +87,10 @@ class BrowseParameters
     }
 
     /**
-     * @param int $offset
+     * @param int|null $offset
      * @return BrowseParameters
      */
-    public function setOffset($offset)
+    public function setOffset($offset = null)
     {
         if (!empty($this->currentPage) && $this->currentPage > 0) {
             $this->offset = ($this->currentPage - 1) * $this->limit;
@@ -185,6 +187,11 @@ class BrowseParameters
             $this->totalPages = ceil($this->count / $this->limit);
         }
 
+        if ($this->currentPage > $this->totalPages) {
+            $this->setCurrentPage($this->totalPages);
+            $this->setOffset();
+        }
+
         return $this;
     }
 
@@ -242,7 +249,25 @@ class BrowseParameters
     }
 
     /**
-     * @return mixed
+     * @return String
+     */
+    public function getClassAlias()
+    {
+        return $this->classAlias;
+    }
+
+    /**
+     * @param String $classAlias
+     * @return BrowseParameters
+     */
+    public function setClassAlias($classAlias)
+    {
+        $this->classAlias = $classAlias;
+        return $this;
+    }
+
+    /**
+     * @return String[]
      */
     protected function getValidOrderColumns()
     {
@@ -250,11 +275,35 @@ class BrowseParameters
     }
 
     /**
-     * @param mixed $validOrderColumns
+     * @param String[] $validOrderColumns
      */
     protected function setValidOrderColumns($validOrderColumns)
     {
         $this->validOrderColumns = $validOrderColumns;
+    }
+
+    private function getMetadataBrowsingLinks() {
+        $links = array();
+
+        if ($this->getCurrentPage() > 1) {
+            $links['firstPage'] = Helper\HttpServerVars::getLinkToPage(1);
+
+            $links['previousPage'] = Helper\HttpServerVars::getLinkToPage(
+                $this->getCurrentPage() - 1
+            );
+        }
+
+        if ($this->getCurrentPage() < $this->getTotalPages()) {
+            $links['nextPage'] = Helper\HttpServerVars::getLinkToPage(
+                $this->getCurrentPage() + 1
+            );
+
+            $links['lastPage'] = Helper\HttpServerVars::getLinkToPage(
+                $this->getTotalPages()
+            );
+        }
+
+        return $links;
     }
 
     /**
@@ -269,19 +318,20 @@ class BrowseParameters
             'direction' => $this->getDirection()
         );
 
-        if ($this->getCount()) {
-            $metadata['count'] = $this->getCount();
+        if ($this->getCurrentPage()) {
+            $metadata['page'] = $this->getCurrentPage();
         }
 
-        if ($this->getCurrentPage()) {
-            $metadata['currentPage'] = $this->getCurrentPage();
-            $metadata['page']        = $this->getCurrentPage();
+        if ($this->getCount() >= 0 && !empty($this->getCurrentPage())) {
+            $metadata['count'] = $this->getCount();
             $metadata['totalPages']  = $this->getTotalPages();
         }
 
         if ($this->getKeywords()) {
             $metadata['keywords'] = $this->getKeywords();
         }
+
+        $metadata = array_merge($metadata, $this->getMetadataBrowsingLinks());
 
         return $metadata;
     }

@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use AppBundle\Controller\Helper;
 use Symfony\Component\Validator\Constraints\Date;
 use Symfony\Component\Validator\Constraints\DateTime;
 
@@ -12,6 +13,10 @@ use Symfony\Component\Validator\Constraints\DateTime;
 */
 class User
 {
+    const CLASS_NAME    = 'AppBundle:User';
+    const CLASS_ALIAS   = 'user';
+    const ORDER_COLUMNS = array('id', 'name', 'email', 'created_at');
+
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id
@@ -19,6 +24,11 @@ class User
      * @var int
      */
     private $id;
+    /**
+     * @ORM\Column(type="string", length=256)
+     * @var string
+     */
+    private $hash;
     /**
      * @ORM\Column(type="string", length=256)
      * @var string
@@ -56,11 +66,34 @@ class User
     private $active = true;
 
     /**
+     * @ORM\OneToMany(targetEntity="Session", mappedBy="user")
+     * @var Session[]
+     */
+    private $sessions;
+
+    /**
      * @return int
      */
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHash()
+    {
+        return $this->hash;
+    }
+
+    /**
+     * @return User
+     */
+    public function setHash()
+    {
+        $this->hash = md5($this->id);
+        return $this;
     }
 
     /**
@@ -205,10 +238,127 @@ class User
         return $this;
     }
 
+    /**
+     * @return Session[]
+     */
+    public function getSessions()
+    {
+        return $this->sessions;
+    }
+
+    /**
+     * @param Session $session
+     * @return User
+     */
+    public function addSessions($session)
+    {
+        $this->sessions[] = $session;
+        return $this;
+    }
+
+    /**
+     * @return User
+     */
+    public function resetSessions()
+    {
+        $this->sessions[] = array();
+        return $this;
+    }
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->sessions = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    /**
+     * Get admin
+     *
+     * @return boolean
+     */
+    public function getAdmin()
+    {
+        return $this->admin;
+    }
+
+    /**
+     * Set active
+     *
+     * @param boolean $active
+     *
+     * @return User
+     */
+    public function setActive($active)
+    {
+        $this->active = $active;
+
+        return $this;
+    }
+
+    /**
+     * Get active
+     *
+     * @return boolean
+     */
+    public function getActive()
+    {
+        return $this->active;
+    }
+
+    /**
+     * Add session
+     *
+     * @param Session $session
+     *
+     * @return User
+     */
+    public function addSession(Session $session)
+    {
+        $this->sessions[] = $session;
+
+        return $this;
+    }
+
+    /**
+     * Remove session
+     *
+     * @param Session $session
+     */
+    public function removeSession(Session $session)
+    {
+        $this->sessions->removeElement($session);
+    }
+
     public function toArray()
     {
-        $result =  get_object_vars($this);
-        unset($result['password']);
+        $user =  get_object_vars($this);
+
+        $result = array(
+            'id' => $user['id'],
+            'link' => Helper\HttpServerVars::getHttpHost() . '/user/'.$user['hash']
+        );
+
+        foreach (array_keys($user) as $key) {
+            switch ($key) {
+                case 'password':
+                    break;
+                case 'sessions':
+                    break;
+                case 'createdAt':
+                    $result['createdAt'] = $this->getCreatedAt()->format('Y-m-d H:m:s');
+                    break;
+                case 'birthDate':
+                    if ($this->getBirthDate()) {
+                        $result['birthDate'] = $this->getBirthDate()->format('Y-m-d');
+                    }
+                    break;
+                default:
+                    $result[$key] = $user[$key];
+            }
+        }
+
+        $result['sessions'] = $result['link'].'/sessions';
         return $result;
     }
 }
