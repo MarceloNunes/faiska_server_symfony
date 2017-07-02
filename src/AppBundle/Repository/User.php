@@ -2,13 +2,14 @@
 
 namespace AppBundle\Repository;
 
-use AppBundle\Entity\User;
+use AppBundle\Entity;
 use Doctrine\ORM\EntityManagerInterface;
 use AppBundle\Controller\Helper;
+use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 
-class UserRepository extends BaseRepository
+class User extends BaseRepository
 {
     /**
      * UserRepository constructor.
@@ -17,9 +18,9 @@ class UserRepository extends BaseRepository
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->setEntityManager($entityManager)
-            ->setClassName(User::CLASS_NAME)
-            ->setClassAlias(User::CLASS_ALIAS)
-            ->setOrderColumns(User::ORDER_COLUMNS);
+            ->setClassName(Entity\User::CLASS_NAME)
+            ->setClassAlias(Entity\User::CLASS_ALIAS)
+            ->setOrderColumns(Entity\User::ORDER_COLUMNS);
     }
 
     private function setupBrowseWhereClause(QueryBuilder $queryBuilder, Helper\BrowseParameters $parameters)
@@ -27,6 +28,8 @@ class UserRepository extends BaseRepository
         $expr = $queryBuilder->expr();
 
         foreach ($parameters->getKeywords() as $keyword) {
+            $keyword = str_replace('\'', '\'\'', $keyword);
+
             $queryBuilder->andWhere(
                 $expr->orX(
                     $expr->like('user.name', "'%$keyword%'"),
@@ -58,5 +61,20 @@ class UserRepository extends BaseRepository
         $this->setupBrowseWhereClause($queryBuilder, $parameters);
 
         return (int) $queryBuilder->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @param string $userHash
+     * @return Entity\User
+     * @throws EntityNotFoundException
+     */
+    public function getByHash($userHash) {
+        $user = $this->entityManager->getRepository('AppBundle:User')->findOneByHash($userHash);
+
+        if (!$user) {
+            throw new EntityNotFoundException();
+        }
+
+        return $user;
     }
 }

@@ -330,14 +330,15 @@ class User
         $this->sessions->removeElement($session);
     }
 
-    public function toArray()
+    public function toArray($getLink = true)
     {
         $user =  get_object_vars($this);
 
         $result = array(
-            'id' => $user['id'],
-            'link' => Helper\HttpServerVars::getHttpHost() . '/user/'.$user['hash']
+            'id' => $user['id']
         );
+
+        $result = array();
 
         foreach (array_keys($user) as $key) {
             switch ($key) {
@@ -352,13 +353,20 @@ class User
                     if ($this->getBirthDate()) {
                         $result['birthDate'] = $this->getBirthDate()->format('Y-m-d');
                     }
+
                     break;
                 default:
                     $result[$key] = $user[$key];
             }
         }
 
-        $result['sessions'] = $result['link'].'/sessions';
+        $link               = Helper\HttpServerVars::getHttpHost() . '/user/'.$user['hash'];
+        $result['sessions'] = $link.'/sessions';
+
+        if ($getLink) {
+            $result['link'] = $link;
+        }
+
         return $result;
     }
 }

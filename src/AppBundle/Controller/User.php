@@ -3,40 +3,32 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Controller\Helper\BrowseParameters;
-use AppBundle\Controller\Helper\Metadata;
+use AppBundle\Entity;
+use AppBundle\Repository;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityNotFoundException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use AppBundle\Entity;
-use AppBundle\Repository\UserRepository;
-use Doctrine\ORM\EntityManagerInterface;
 
-class UserController extends Controller
+class User extends Controller
 {
     /**
-     * @param EntityManagerInterface $em
-     * @return integer
-     */
-    private function countUsers (EntityManagerInterface $em) {
-        $qb = $em
-            ->createQueryBuilder()
-            ->select('count(user.id)')
-            ->from('AppBundle:User','user');
-        return (int) $qb->getQuery()->getSingleScalarResult();
-    }
-
-    /**
+     * Returns a browsable list of users according to a list of parameters.
+     * This method has no expectex exceptions. All invalid parameters are
+     * converted to their default value.
+     *
      * @Route("/users")
      * @Method({"GET"})
      * @param EntityManagerInterface $entityManager
      * @return JsonResponse
      */
-    public function listUsersAction(EntityManagerInterface $entityManager)
+    public function listAction(EntityManagerInterface $entityManager)
     {
         $response   = new JsonResponse();
-        $repository = new UserRepository($entityManager);
+        $repository = new Repository\User($entityManager);
 
         $parameters = new BrowseParameters(
             Entity\User::CLASS_ALIAS,
@@ -61,24 +53,25 @@ class UserController extends Controller
     }
 
     /**
-     * @Route("/user/{userId}")
+     * @Route("/user/{userHash}")
      * @Method({"GET"})
-     * @param Integer $userId
-     * @param EntityManagerInterface $em
+     * @param Integer $userHash
+     * @param EntityManagerInterface $entityManager
      * @return JsonResponse
      */
-    function getUserAction($userId, EntityManagerInterface $em)
+    function getAction($userHash, EntityManagerInterface $entityManager)
     {
         $response = new JsonResponse();
+        $repository = new Repository\User($entityManager);
 
-        /** @var Entity\User $user */
-        $user = $em->getRepository('AppBundle:UserRepository')->find($userId);
-
-        if (!$user) {
-            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
+        try {
+            $user = $repository->getByHash($userHash);
+            $response->setContent($this->json($user->toArray(false)));
+        } catch (EntityNotFoundException $e) {
+            $response->setStatusCode(Response::HTTP_NOT_FOUND);
         }
 
-        return $response->setContent($this->json($user->toArray()));
+        return $response;
     }
 
     /**
