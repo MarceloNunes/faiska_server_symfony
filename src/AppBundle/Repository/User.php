@@ -6,7 +6,6 @@ use AppBundle\Entity;
 use Doctrine\ORM\EntityManagerInterface;
 use AppBundle\Controller\Helper;
 use Doctrine\ORM\EntityNotFoundException;
-use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 
 class User extends BaseRepository
@@ -57,9 +56,18 @@ class User extends BaseRepository
      */
     public function countByKeyword(Helper\BrowseParameters $parameters)
     {
-        $queryBuilder = $this->setupCountQueryBuilder($parameters);
+        $queryBuilder = $this->setupCountQueryBuilder();
         $this->setupBrowseWhereClause($queryBuilder, $parameters);
 
+        return (int) $queryBuilder->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @return int
+     */
+    public function countAll()
+    {
+        $queryBuilder = $this->setupCountQueryBuilder();
         return (int) $queryBuilder->getQuery()->getSingleScalarResult();
     }
 
@@ -69,7 +77,7 @@ class User extends BaseRepository
      * @throws EntityNotFoundException
      */
     public function getByHash($userHash) {
-        $user = $this->entityManager->getRepository('AppBundle:User')->findOneByHash($userHash);
+        $user = $this->entityManager->getRepository(Entity\User::CLASS_NAME)->findOneByHash($userHash);
 
         if (!$user) {
             throw new EntityNotFoundException();

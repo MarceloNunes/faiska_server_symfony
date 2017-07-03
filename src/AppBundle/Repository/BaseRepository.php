@@ -113,10 +113,9 @@ abstract class BaseRepository
     }
 
     /**
-     * @param BrowseParameters $parameters
      * @return QueryBuilder
      */
-    protected function setupCountQueryBuilder(BrowseParameters $parameters)
+    protected function setupCountQueryBuilder()
     {
         return $this->entityManager->createQueryBuilder()
             ->select('count('.$this->classAlias.')')

@@ -4,14 +4,17 @@ namespace AppBundle\Controller;
 
 use AppBundle\Controller\Helper\BrowseParameters;
 use AppBundle\Entity;
+use AppBundle\Exception;
 use AppBundle\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityNotFoundException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\Validator\Constraints;
 
 class User extends Controller
 {
@@ -72,6 +75,49 @@ class User extends Controller
         }
 
         return $response;
+    }
+
+    /**
+     * @Route("/user")
+     * @Method({"POST"})
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
+    function insertAction(EntityManagerInterface $entityManager)
+    {
+        $request  = Request::createFromGlobals();
+        $response = new JsonResponse();
+        $repository = new Repository\User($entityManager);
+
+        $user = new Entity\User();
+        $user
+            ->setName($request->get('name'))
+            ->setEmail($request->get('email'))
+            ->setSecret($request->get('secret'))
+            ->setBirthDate($request->get('birthDate'))
+            ->activate();
+
+        if ($repository->countAll() == 0) {
+            $user->setAdmin();
+        } else {
+            $user->unsetAdmin();
+        }
+
+        try {
+            $user->validate($entityManager, $this->get('validator'));
+            $entityManager->persist($user);
+            $entityManager->flush();
+
+            $user->setHash();
+            $entityManager->flush();
+        }
+        catch (Exception\Http\BadRequest $badRequest) {
+            return $response
+                ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                ->setContent($this->json($badRequest->getErrors()));
+        }
+
+        return $response->setContent($this->json($user->toArray()));
     }
 
     /**

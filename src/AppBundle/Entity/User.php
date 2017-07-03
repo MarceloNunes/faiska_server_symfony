@@ -2,10 +2,11 @@
 
 namespace AppBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use AppBundle\Controller\Helper;
-use Symfony\Component\Validator\Constraints\Date;
-use Symfony\Component\Validator\Constraints\DateTime;
+use AppBundle\Exception\Http\BadRequest;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints;
 
 /**
 * @ORM\Entity
@@ -25,7 +26,7 @@ class User
      */
     private $id;
     /**
-     * @ORM\Column(type="string", length=256)
+     * @ORM\Column(type="string", length=256, nullable=true)
      * @var string
      */
     private $hash;
@@ -35,10 +36,12 @@ class User
      */
     private $email;
     /**
+     * @Constraints\Email(checkMX=true)
+     * @Constraints\NotBlank
      * @ORM\Column(type="string", length=50)
      * @var string
      */
-    private $password;
+    private $secret;
     /**
      * @ORM\Column(type="string", length=256)
      * @var string
@@ -46,7 +49,7 @@ class User
     private $name;
     /**
      * @ORM\Column(type="datetime", nullable=true)
-     * @var Date
+     * @var \DateTime
      */
     private $birthDate = null;
     /**
@@ -56,7 +59,7 @@ class User
     private $admin = false;
     /**
      * @ORM\Column(type="datetime")
-     * @var DateTime
+     * @var \DateTime
      */
     private $createdAt;
     /**
@@ -117,18 +120,18 @@ class User
     /**
      * @return string
      */
-    public function getPassword()
+    public function getSecret()
     {
-        return $this->password;
+        return $this->secret;
     }
 
     /**
-     * @param string $password
+     * @param string $secret
      * @return User
      */
-    public function setPassword($password)
+    public function setSecret($secret)
     {
-        $this->password = $password;
+        $this->secret = $secret;
         return $this;
     }
 
@@ -151,7 +154,7 @@ class User
     }
 
     /**
-     * @return mixed
+     * @return \DateTime
      */
     public function getBirthDate()
     {
@@ -159,7 +162,7 @@ class User
     }
 
     /**
-     * @param mixed $birthDate
+     * @param \DateTime $birthDate
      * @return User
      */
     public function setBirthDate($birthDate)
@@ -195,7 +198,7 @@ class User
     }
 
     /**
-     * @return DateTime
+     * @return \DateTime
      */
     public function getCreatedAt()
     {
@@ -203,7 +206,7 @@ class User
     }
 
     /**
-     * @param DateTime $createdAt
+     * @param \DateTime $createdAt
      * @return User
      */
     public function setCreatedAt($createdAt)
@@ -334,10 +337,6 @@ class User
     {
         $user =  get_object_vars($this);
 
-        $result = array(
-            'id' => $user['id']
-        );
-
         $result = array();
 
         foreach (array_keys($user) as $key) {
@@ -368,5 +367,70 @@ class User
         }
 
         return $result;
+    }
+
+    /**
+     * @param EntityManagerInterface $entityManager
+     * @param object $ctrlValidator
+     * @ORM\PrePersist
+     * @ORM\PreUpdate
+     * @throws BadRequest
+     */
+    public function validate(EntityManagerInterface $entityManager, $ctrlValidator)
+    {
+        $badRequest = new BadRequest();
+
+        if (empty($this->email)) {
+            $badRequest->addError('email', BadRequest::BLANK_VALUE);
+        } else {
+            $emailError = $ctrlValidator->validate(
+                $this->email,
+                new Constraints\Email()
+            );
+
+            if (!empty((string) $emailError)) {
+                $badRequest->addError('email', BadRequest::INVALID_FORMAT);
+            } else {
+                $user = $entityManager
+                    ->getRepository(self::CLASS_NAME)
+                    ->findByEmail($this->email);
+
+                if (!empty($user)) {
+                    $badRequest->addError('email', BadRequest::UNIQUE_KEY_CONSTRAINT_ERROR);
+                }
+            }
+        }
+
+        if (empty($this->secret)) {
+            $badRequest->addError('secret', BadRequest::BLANK_VALUE);
+        } else {
+
+            // Checking if secret hash is a valid hex string of lenght 32
+            if (!preg_match('/^[a-f0-9]{32}$/', $this->secret)) {
+                $badRequest->addError('secret', BadRequest::INVALID_FORMAT);
+            }
+        }
+
+        if (empty($this->name)) {
+            $badRequest->addError('name', BadRequest::BLANK_VALUE);
+        }
+
+        if ($this->birthDate) {
+            if (!$this->birthDate instanceof \DateTime) {
+                try {
+                    $this->setBirthDate(new \DateTime((string) $this->birthDate));
+                } catch (\Exception $e) {
+                    $badRequest->addError('birthDate', BadRequest::INVALID_FORMAT);
+                }
+            }
+        }
+
+        if (!empty($badRequest->getErrors())) {
+            throw $badRequest;
+        }
+
+        if (empty($this->id)) {
+            $this->setCreatedAt(new \DateTime('now'));
+        }
     }
 }
