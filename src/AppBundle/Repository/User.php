@@ -3,10 +3,14 @@
 namespace AppBundle\Repository;
 
 use AppBundle\Entity;
+use AppBundle\Exception\Http\BadRequest;
+use AppBundle\Repository\Helper\Validator;
 use Doctrine\ORM\EntityManagerInterface;
 use AppBundle\Controller\Helper;
 use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\QueryBuilder;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Constraints\Email;
 
 class User extends BaseRepository
 {
@@ -82,6 +86,51 @@ class User extends BaseRepository
         if (!$user) {
             throw new EntityNotFoundException();
         }
+
+        return $user;
+    }
+
+    /**
+     * @param Entity\User $user
+     * @param Request $request
+     */
+    protected function initWithFormData ($user, $request) {
+        $user
+            ->setName($request->get('name'))
+            ->setEmail($request->get('email'))
+            ->setSecret($request->get('secret'))
+            ->setBirthDate($request->get('birthDate'));
+    }
+
+    /**
+     * @param Request $request
+     * @param $ctrlValidator
+     * @return Entity\User
+     * @throws BadRequest
+     */
+    public function insert(Request $request, $ctrlValidator)
+    {
+        $user = new Entity\User();
+
+        $this->initWithFormData($user, $request);
+
+        if ($this->countAll() == 0) {
+            $user->setAdmin();
+        } else {
+            $user->unsetAdmin();
+        }
+
+        $user->activate();
+        $user->setCreatedAt(new \DateTime('now'));
+
+        $userValidator = new Validator\User($user);
+        $userValidator->validate($this->entityManager, $ctrlValidator);
+
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        $user->setHash();
+        $this->entityManager->flush();
 
         return $user;
     }

@@ -14,7 +14,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\Validator\Constraints;
 
 class User extends Controller
 {
@@ -43,6 +42,7 @@ class User extends Controller
         $users      = $repository->browseByKeyword($parameters);
         $data       = array();
 
+        /** @var Entity\User $user */
         foreach ($users as $user) {
             $data[] = $user->toArray();
         }
@@ -62,7 +62,7 @@ class User extends Controller
      * @param EntityManagerInterface $entityManager
      * @return JsonResponse
      */
-    function getAction($userHash, EntityManagerInterface $entityManager)
+    public function getAction($userHash, EntityManagerInterface $entityManager)
     {
         $response = new JsonResponse();
         $repository = new Repository\User($entityManager);
@@ -83,47 +83,32 @@ class User extends Controller
      * @param EntityManagerInterface $entityManager
      * @return JsonResponse
      */
-    function insertAction(EntityManagerInterface $entityManager)
+    public function insertAction(EntityManagerInterface $entityManager)
     {
-        $request  = Request::createFromGlobals();
         $response = new JsonResponse();
-        $repository = new Repository\User($entityManager);
-
-        $user = new Entity\User();
-        $user
-            ->setName($request->get('name'))
-            ->setEmail($request->get('email'))
-            ->setSecret($request->get('secret'))
-            ->setBirthDate($request->get('birthDate'))
-            ->activate();
-
-        if ($repository->countAll() == 0) {
-            $user->setAdmin();
-        } else {
-            $user->unsetAdmin();
-        }
 
         try {
-            $user->validate($entityManager, $this->get('validator'));
-            $entityManager->persist($user);
-            $entityManager->flush();
+            $userRepository = new Repository\User($entityManager);
 
-            $user->setHash();
-            $entityManager->flush();
+            $user = $userRepository->insert(
+                Request::createFromGlobals(),
+                $this->get('validator')
+            );
+
+            return $response->setContent($this->json($user->toArray()));
         }
         catch (Exception\Http\BadRequest $badRequest) {
             return $response
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->setContent($this->json($badRequest->getErrors()));
         }
-
-        return $response->setContent($this->json($user->toArray()));
     }
 
     /**
+     * @Route("/user")
      * @Route("/users")
      */
-    function notAllowedAction()
+    public function notAllowedAction()
     {
         $response = new JsonResponse();
         $response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
