@@ -2,7 +2,7 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Controller\Helper\BrowseParameters;
+use AppBundle\Controller\Helper;
 use AppBundle\Entity;
 use AppBundle\Exception;
 use AppBundle\Repository;
@@ -10,7 +10,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityNotFoundException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -32,7 +31,7 @@ class User extends Controller
         $response   = new JsonResponse();
         $repository = new Repository\User($entityManager);
 
-        $parameters = new BrowseParameters(
+        $parameters = new Helper\BrowseParameters(
             Entity\User::CLASS_ALIAS,
             Entity\User::ORDER_COLUMNS
         );
@@ -64,7 +63,7 @@ class User extends Controller
      */
     public function getAction($userHash, EntityManagerInterface $entityManager)
     {
-        $response = new JsonResponse();
+        $response   = new JsonResponse();
         $repository = new Repository\User($entityManager);
 
         try {
@@ -85,19 +84,18 @@ class User extends Controller
      */
     public function insertAction(EntityManagerInterface $entityManager)
     {
-        $response = new JsonResponse();
+        $response       = new JsonResponse();
+        $userRepository = new Repository\User($entityManager);
 
         try {
-            $userRepository = new Repository\User($entityManager);
-
             $user = $userRepository->insert(
-                Request::createFromGlobals(),
+                Helper\UnifiedRequest::createFromGlobals(),
                 $this->get('validator')
             );
 
             return $response->setContent($this->json($user->toArray()));
-        }
-        catch (Exception\Http\BadRequest $badRequest) {
+
+        } catch (Exception\Http\BadRequestException $badRequest) {
             return $response
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->setContent($this->json($badRequest->getErrors()));
@@ -106,12 +104,30 @@ class User extends Controller
 
     /**
      * @Route("/user")
-     * @Route("/users")
+     * @Method({"PATCH"})
+     * @param string $userHash
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
      */
-    public function notAllowedAction()
+    public function updateAction($userHash, EntityManagerInterface $entityManager)
     {
         $response = new JsonResponse();
-        $response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
-        return $response;
+
+        try {
+            $userRepository = new Repository\User($entityManager);
+
+            $user = $userRepository->update(
+                $userHash,
+                Helper\UnifiedRequest::createFromGlobals(),
+                $this->get('validator')
+            );
+
+            return $response->setContent($this->json($user->toArray()));
+
+        } catch (Exception\Http\BadRequestException $badRequest) {
+            return $response
+                ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                ->setContent($this->json($badRequest->getErrors()));
+        }
     }
 }

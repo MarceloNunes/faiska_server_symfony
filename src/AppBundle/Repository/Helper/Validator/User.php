@@ -2,37 +2,38 @@
 
 namespace AppBundle\Repository\Helper\Validator;
 
+use AppBundle\Controller\Helper;
 use AppBundle\Entity;
-use AppBundle\Exception\Http\BadRequest;
+use AppBundle\Exception\Http\BadRequestException;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Validator\Constraints\Email;
+use Symfony\Component\Validator\Constraints;
 
 class User
 {
-
-    /** @var BadRequest */
+    /** @var BadRequestException */
     private $badRequest;
-    /** @var  Entity\User */
-    private $user;
+    /** @var  Helper\UnifiedRequest */
+    private $request;
 
     /**
      * User constructor.
-     * @param Entity\User $user
+     * @param Helper\UnifiedRequest $request
      */
-    function __construct(Entity\User $user)
+    function __construct(Helper\UnifiedRequest $request)
     {
-        $this->user = $user;
-        $this->badRequest = new BadRequest();
+        $this->request = $request;
+        $this->badRequest = new BadRequestException();
     }
 
     /**
      * @param EntityManagerInterface $entityManager
      * @param $ctrlValidator
-     * @throws BadRequest
+     * @param int $userId
+     * @throws BadRequestException
      */
-    public function validate(EntityManagerInterface $entityManager, $ctrlValidator)
+    public function validate(EntityManagerInterface $entityManager, $ctrlValidator, $userId = 0)
     {
-        $this->validateEmail($entityManager, $ctrlValidator);
+        $this->validateEmail($entityManager, $ctrlValidator, $userId);
         $this->validateSecret();
         $this->validateName();
         $this->validateBirthDate();
@@ -45,26 +46,30 @@ class User
     /**
      * @param EntityManagerInterface $entityManager
      * @param $ctrlValidator
+     * @param int $userId
      */
-    private function validateEmail(EntityManagerInterface $entityManager, $ctrlValidator)
+    private function validateEmail(EntityManagerInterface $entityManager, $ctrlValidator, $userId)
     {
-        if (empty($this->user->getEmail())) {
-            $this->badRequest->addError('email', BadRequest::BLANK_VALUE);
+        if ($this->request->getRequest()->getMethod() !== 'PATCH'
+            && !$this->request->isProvided('email')
+        ) {
+            $this->badRequest->addError('email', BadRequestException::BLANK_VALUE);
         } else {
             $emailError = $ctrlValidator->validate(
-                $this->user->getEmail(),
-                new Email()
+                $this->request->get('email'),
+                new Constraints\Email()
             );
 
             if (!empty((string) $emailError)) {
-                $this->badRequest->addError('email', BadRequest::INVALID_FORMAT);
+                $this->badRequest->addError('email', BadRequestException::INVALID_FORMAT);
             } else {
+                /** @var Entity\User $otherUser */
                 $otherUser = $entityManager
                     ->getRepository(Entity\User::CLASS_NAME)
-                    ->findByEmail($this->user->getEmail());
+                    ->findByEmail($this->request->get('email'));
 
-                if (!empty($otherUser)) {
-                    $this->badRequest->addError('email', BadRequest::UNIQUE_KEY_CONSTRAINT_ERROR);
+                if (!empty($otherUser) && $otherUser->getId() != $userId) {
+                    $this->badRequest->addError('email', BadRequestException::UNIQUE_KEY_CONSTRAINT_ERROR);
                 }
             }
         }
@@ -75,13 +80,15 @@ class User
      */
     private function validateSecret()
     {
-        if (empty($this->user->getSecret())) {
-            $this->badRequest->addError('secret', BadRequest::BLANK_VALUE);
+        if ($this->request->getRequest()->getMethod() !== 'PATCH' &&
+            !$this->request->isProvided('secret')
+        ) {
+            $this->badRequest->addError('secret', BadRequestException::BLANK_VALUE);
         } else {
 
             // Checking if secret hash is a valid hex string of lenght 32
-            if (!preg_match('/^[a-f0-9]{32}$/', $this->user->getSecret())) {
-                $this->badRequest->addError('secret', BadRequest::INVALID_FORMAT);
+            if (!preg_match('/^[a-f0-9]{32}$/', $this->request->get('secret'))) {
+                $this->badRequest->addError('secret', BadRequestException::INVALID_FORMAT);
             }
         }
     }
@@ -91,8 +98,10 @@ class User
      */
     private function validateName()
     {
-        if (empty($this->user->getName())) {
-            $this->badRequest->addError('name', BadRequest::BLANK_VALUE);
+        if ($this->request->getRequest()->getMethod() !== 'PATCH' &&
+            !$this->request->isProvided('name')
+        ) {
+            $this->badRequest->addError('name', BadRequestException::BLANK_VALUE);
         }
     }
 
@@ -101,13 +110,11 @@ class User
      */
     private function validateBirthDate()
     {
-        if ($this->user->getBirthDate()) {
-            if (!$this->user->getBirthDate() instanceof \DateTime) {
-                try {
-                    $this->user->setBirthDate(new \DateTime((string) $this->user->getBirthDate()));
-                } catch (\Exception $e) {
-                    $this->badRequest->addError('birthDate', BadRequest::INVALID_FORMAT);
-                }
+        if ($this->request->isProvided('birthDate')) {
+            try {
+                new \DateTime((string) $this->request->get('birthDate'));
+            } catch (\Exception $e) {
+                $this->badRequest->addError('birthDate', BadRequestException::INVALID_FORMAT);
             }
         }
     }

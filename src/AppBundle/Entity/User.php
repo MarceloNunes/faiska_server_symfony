@@ -3,8 +3,6 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Controller\Helper;
-use AppBundle\Exception\Http\BadRequest;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints;
 
@@ -95,7 +93,7 @@ class User
      */
     public function setHash()
     {
-        $this->hash = md5($this->id);
+        $this->hash = hash ('ripemd160', $this->email);
         return $this;
     }
 

@@ -2,7 +2,7 @@
 
 namespace AppBundle\Exception\Http;
 
-class BadRequest extends \Exception
+class BadRequestException extends \Exception
 {
     const BLANK_VALUE                 = 'BLANK_VALUE';
     const NULL_VALUE                  = 'NULL_VALUE';

@@ -3,14 +3,12 @@
 namespace AppBundle\Repository;
 
 use AppBundle\Entity;
-use AppBundle\Exception\Http\BadRequest;
+use AppBundle\Exception\Http\BadRequestException;
 use AppBundle\Repository\Helper\Validator;
 use Doctrine\ORM\EntityManagerInterface;
 use AppBundle\Controller\Helper;
 use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\QueryBuilder;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Validator\Constraints\Email;
 
 class User extends BaseRepository
 {
@@ -26,6 +24,10 @@ class User extends BaseRepository
             ->setOrderColumns(Entity\User::ORDER_COLUMNS);
     }
 
+    /**
+     * @param QueryBuilder $queryBuilder
+     * @param Helper\BrowseParameters $parameters
+     */
     private function setupBrowseWhereClause(QueryBuilder $queryBuilder, Helper\BrowseParameters $parameters)
     {
         $expr = $queryBuilder->expr();
@@ -81,7 +83,10 @@ class User extends BaseRepository
      * @throws EntityNotFoundException
      */
     public function getByHash($userHash) {
-        $user = $this->entityManager->getRepository(Entity\User::CLASS_NAME)->findOneByHash($userHash);
+        $user = $this
+            ->entityManager
+            ->getRepository(Entity\User::CLASS_NAME)
+            ->findOneByHash($userHash);
 
         if (!$user) {
             throw new EntityNotFoundException();
@@ -91,28 +96,28 @@ class User extends BaseRepository
     }
 
     /**
-     * @param Entity\User $user
-     * @param Request $request
-     */
-    protected function initWithFormData ($user, $request) {
-        $user
-            ->setName($request->get('name'))
-            ->setEmail($request->get('email'))
-            ->setSecret($request->get('secret'))
-            ->setBirthDate($request->get('birthDate'));
-    }
-
-    /**
-     * @param Request $request
+     * @param Helper\UnifiedRequest $request
      * @param $ctrlValidator
      * @return Entity\User
-     * @throws BadRequest
+     * @throws BadRequestException
      */
-    public function insert(Request $request, $ctrlValidator)
+    public function insert(Helper\UnifiedRequest $request, $ctrlValidator)
     {
-        $user = new Entity\User();
+        $userValidator = new Validator\User($request);
+        $userValidator->validate($this->entityManager, $ctrlValidator);
 
-        $this->initWithFormData($user, $request);
+        $user = new Entity\User();
+        $user
+            ->setEmail($request->get('email'))
+            ->setSecret($request->get('secret'))
+            ->setName($request->get('name'))
+            ->setCreatedAt(new \DateTime('now'))
+            ->setHash()
+            ->activate();
+
+        if ($request->isProvided('birthDate')) {
+            $user->setBirthDate(new \DateTime($request->get('birthDate')));
+        }
 
         if ($this->countAll() == 0) {
             $user->setAdmin();
@@ -120,16 +125,68 @@ class User extends BaseRepository
             $user->unsetAdmin();
         }
 
-        $user->activate();
-        $user->setCreatedAt(new \DateTime('now'));
-
-        $userValidator = new Validator\User($user);
-        $userValidator->validate($this->entityManager, $ctrlValidator);
-
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        $user->setHash();
+        return $user;
+    }
+
+    /**
+     * @param $userHash
+     * @param Helper\UnifiedRequest $request
+     * @param $ctrlValidator
+     * @return Entity\User
+     * @throws EntityNotFoundException
+     * @throws BadRequestException
+     */
+    public function update($userHash, Helper\UnifiedRequest $request, $ctrlValidator)
+    {
+        /** @var Entity\User $user */
+        $user = $this
+            ->entityManager
+            ->getRepository(Entity\User::CLASS_NAME)
+            ->findOneByHash($userHash);
+
+        if (!$user) {
+            throw new EntityNotFoundException();
+        }
+
+        $userValidator = new Validator\User($request);
+        $userValidator->validate($this->entityManager, $ctrlValidator, $user->getId());
+
+        if ($request->isProvided('name')) {
+            $user->setName($request->get('name'));
+        }
+
+        if ($request->isProvided('email')) {
+            $user->setEmail($request->get('email'));
+        }
+
+        if ($request->isProvided('secret')) {
+            $user->setSecret($request->get('secret'));
+        }
+
+        if ($request->isProvided('active')) {
+            if ((int) $request->get('active')) {
+                $user->activate();
+            } else {
+                $user->deactivate();
+            }
+        }
+
+        if ($request->isProvided('admin')) {
+            if ((int) $request->get('admin')) {
+                $user->setAdmin();
+            } else {
+                $user->unsetAdmin();
+            }
+        }
+
+        if ($request->isProvided('birthDate')) {
+            $user->setBirthDate(new \DateTime($request->get('birthDate')));
+        }
+
+        $this->entityManager->persist($user);
         $this->entityManager->flush();
 
         return $user;
