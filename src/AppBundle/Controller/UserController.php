@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
-class User extends Controller
+class UserController extends Controller
 {
     /**
      * Returns a browsable list of users according to a list of parameters.
@@ -29,7 +29,7 @@ class User extends Controller
     public function listAction(EntityManagerInterface $entityManager)
     {
         $response   = new JsonResponse();
-        $repository = new Repository\User($entityManager);
+        $repository = new Repository\UserRepository($entityManager);
 
         $parameters = new Helper\BrowseParameters(
             Entity\User::CLASS_ALIAS,
@@ -64,7 +64,7 @@ class User extends Controller
     public function getAction($userHash, EntityManagerInterface $entityManager)
     {
         $response   = new JsonResponse();
-        $repository = new Repository\User($entityManager);
+        $repository = new Repository\UserRepository($entityManager);
 
         try {
             $user = $repository->getByHash($userHash);
@@ -85,7 +85,7 @@ class User extends Controller
     public function insertAction(EntityManagerInterface $entityManager)
     {
         $response       = new JsonResponse();
-        $userRepository = new Repository\User($entityManager);
+        $userRepository = new Repository\UserRepository($entityManager);
 
         try {
             $user = $userRepository->insert(
@@ -103,7 +103,7 @@ class User extends Controller
     }
 
     /**
-     * @Route("/user")
+     * @Route("/user/{userHash}")
      * @Method({"PATCH"})
      * @param string $userHash
      * @param EntityManagerInterface $entityManager
@@ -114,7 +114,7 @@ class User extends Controller
         $response = new JsonResponse();
 
         try {
-            $userRepository = new Repository\User($entityManager);
+            $userRepository = new Repository\UserRepository($entityManager);
 
             $user = $userRepository->update(
                 $userHash,

@@ -8,7 +8,7 @@ use AppBundle\Exception\Http\BadRequestException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Constraints;
 
-class User
+class UserValidator
 {
     /** @var BadRequestException */
     private $badRequest;
@@ -34,7 +34,7 @@ class User
     public function validate(EntityManagerInterface $entityManager, $ctrlValidator, $userId = 0)
     {
         $this->validateEmail($entityManager, $ctrlValidator, $userId);
-        $this->validateSecret();
+        $this->validatePassword();
         $this->validateName();
         $this->validateBirthDate();
 
@@ -66,7 +66,9 @@ class User
                 /** @var Entity\User $otherUser */
                 $otherUser = $entityManager
                     ->getRepository(Entity\User::CLASS_NAME)
-                    ->findByEmail($this->request->get('email'));
+                    ->findOneBy(array(
+                        'email' => $this->request->get('email')
+                    ));
 
                 if (!empty($otherUser) && $otherUser->getId() != $userId) {
                     $this->badRequest->addError('email', BadRequestException::UNIQUE_KEY_CONSTRAINT_ERROR);
@@ -78,17 +80,17 @@ class User
     /**
      *
      */
-    private function validateSecret()
+    private function validatePassword()
     {
         if ($this->request->getRequest()->getMethod() !== 'PATCH' &&
-            !$this->request->isProvided('secret')
+            !$this->request->isProvided('password')
         ) {
-            $this->badRequest->addError('secret', BadRequestException::BLANK_VALUE);
+            $this->badRequest->addError('password', BadRequestException::BLANK_VALUE);
         } else {
 
-            // Checking if secret hash is a valid hex string of lenght 32
-            if (!preg_match('/^[a-f0-9]{32}$/', $this->request->get('secret'))) {
-                $this->badRequest->addError('secret', BadRequestException::INVALID_FORMAT);
+            // Checking if password hash is a valid hex string of lenght 32
+            if (!preg_match('/^[a-f0-9]{32}$/', $this->request->get('password'))) {
+                $this->badRequest->addError('password', BadRequestException::INVALID_FORMAT);
             }
         }
     }

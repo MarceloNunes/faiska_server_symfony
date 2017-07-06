@@ -22,7 +22,7 @@ class DefaultController extends Controller
     }
 
     /**
-     * @Route("/user")
+     * @Route("/test")
      * @Method({"GET", "PUT", "PATCH", "POST"})
      * @return JsonResponse
      */

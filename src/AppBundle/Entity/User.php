@@ -39,7 +39,7 @@ class User
      * @ORM\Column(type="string", length=50)
      * @var string
      */
-    private $secret;
+    private $password;
     /**
      * @ORM\Column(type="string", length=256)
      * @var string
@@ -118,19 +118,28 @@ class User
     /**
      * @return string
      */
-    public function getSecret()
+    public function getPassword()
     {
-        return $this->secret;
+        return $this->password;
+    }
+
+    /**
+     * @param string $password
+     * @return User
+     */
+    public function setPassword($password)
+    {
+        $this->password = hash ('ripemd160', $password);
+        return $this;
     }
 
     /**
      * @param string $secret
-     * @return User
+     * @return boolean
      */
-    public function setSecret($secret)
+    public function samePassword($secret)
     {
-        $this->secret = $secret;
-        return $this;
+        return $this->password === hash ('ripemd160', $secret);
     }
 
     /**
@@ -339,7 +348,7 @@ class User
 
         foreach (array_keys($user) as $key) {
             switch ($key) {
-                case 'password':
+                case 'secret':
                     break;
                 case 'sessions':
                     break;

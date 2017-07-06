@@ -322,8 +322,10 @@ class BrowseParameters
             $metadata['page'] = $this->getCurrentPage();
         }
 
-        if ($this->getCount() >= 0 && !empty($this->getCurrentPage())) {
+        if ($this->getCount() >= 0) {
             $metadata['count'] = $this->getCount();
+        }
+        if (!empty($this->getCurrentPage())) {
             $metadata['totalPages']  = $this->getTotalPages();
         }
 
