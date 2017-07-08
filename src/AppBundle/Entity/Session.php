@@ -2,8 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Controller\Helper;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * @ORM\Entity
@@ -11,6 +11,10 @@ use Symfony\Component\Validator\Constraints\DateTime;
  */
 class Session
 {
+    const CLASS_NAME    = 'AppBundle:Session';
+    const CLASS_ALIAS   = 'session';
+    const ORDER_COLUMNS = array('id', 'opened_at', 'closed_at');
+
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id
@@ -19,10 +23,10 @@ class Session
      */
     protected $id;
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", length=256)
      * @var string
      */
-    protected $authKey;
+    private $hash;
     /**
      * @ORM\ManyToOne(targetEntity="User", inversedBy="sessions")
      * @var User
@@ -35,14 +39,24 @@ class Session
     protected $remoteAddress;
     /**
      * @ORM\Column(type="datetime")
-     * @var DateTime
+     * @var \DateTime
      */
-    protected $createdAt;
+    protected $openedAt;
     /**
-     * @ORM\Column(type="boolean")
-     * @var bool
+     * @ORM\Column(type="datetime", nullable=true)
+     * @var \DateTime
      */
-    protected $active = true;
+    protected $modifiedAt;
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     * @var \DateTime
+     */
+    protected $closedAt;
+    /**
+     * @ORM\Column(type="integer")
+     * @var int
+     */
+    protected $timeout = 36000;
 
     /**
      * @return int
@@ -55,18 +69,18 @@ class Session
     /**
      * @return string
      */
-    public function getAuthKey()
+    public function getHash()
     {
-        return $this->authKey;
+        return $this->hash;
     }
 
     /**
-     * @param string $authKey
      * @return Session
      */
-    public function setAuthKey($authKey)
+    public function setHash()
     {
-        $this->authKey = $authKey;
+        $this->hash = hash ('ripemd160', $this->openedAt->getTimestamp().random_int(0, 99999999999));
+
         return $this;
     }
 
@@ -82,7 +96,7 @@ class Session
      * @param User $user
      * @return Session
      */
-    public function setUser($user)
+    public function setUser(User $user)
     {
         $this->user = $user;
         return $this;
@@ -107,72 +121,161 @@ class Session
     }
 
     /**
-     * @return DateTime
+     * @return \DateTime
      */
-    public function getCreatedAt()
+    public function getOpenedAt()
     {
-        return $this->createdAt;
+        return $this->openedAt;
     }
 
     /**
-     * @param DateTime $createdAt
+     * @return \DateTime
+     */
+    public function getModifiedAt()
+    {
+        return $this->modifiedAt;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getClosedAt()
+    {
+        return $this->closedAt;
+    }
+
+    /**
      * @return Session
      */
-    public function setCreatedAt($createdAt)
+    public function open()
     {
-        $this->createdAt = $createdAt;
+        $this->openedAt = new \DateTime('now');
+        return $this;
+    }
+
+    /**
+     * @return Session
+     */
+    public function modify()
+    {
+        $this->modifiedAt = new \DateTime('now');
+        return $this;
+    }
+
+    /**
+     * @return Session
+     */
+    public function close()
+    {
+        $this->closedAt = new \DateTime('now');
         return $this;
     }
 
     /**
      * @return bool
      */
-    public function isActive()
+    public function isOpen()
     {
-        return $this->active;
+        if (empty($this->closedAt) && $this->isExpired()) {
+            $this->close();
+        }
+
+        return empty($this->closedAt);
     }
 
     /**
-     * @param bool $active
+     * @return int
+     */
+    public function getTimeout()
+    {
+        return $this->timeout;
+    }
+
+    /**
+     * @param int $timeout
      * @return Session
      */
-    public function activate($active)
+    public function setTimeout($timeout)
     {
-        $this->active = true;
+        $this->timeout = $timeout;
         return $this;
     }
 
     /**
-     * @param bool $active
-     * @return Session
+     * @return \DateTime
      */
-    public function deactivate($active)
+    public function getExpirationTime()
     {
-        $this->active = false;
-        return $this;
+        $expirationTime = new \DateTime();
+        $expirationTime->setTimestamp($this->modifiedAt->getTimestamp() + $this->timeout);
+        return $expirationTime;
     }
 
     /**
-     * Set active
-     *
-     * @param boolean $active
-     *
-     * @return Session
+     * @return bool
      */
-    public function setActive($active)
+    public function isExpired()
     {
-        $this->active = $active;
-
-        return $this;
+        $expirationTimestamp = $this->modifiedAt->getTimestamp() + $this->timeout;
+        $nowTime             = new \DateTime('now');
+        $nowTimestamp        = $nowTime->getTimestamp();
+        return $nowTimestamp > $expirationTimestamp;
     }
 
-    /**
-     * Get active
-     *
-     * @return boolean
-     */
-    public function getActive()
+    public function toArray($getLink = true)
     {
-        return $this->active;
+        $session =  get_object_vars($this);
+        $result  = array();
+        $this->isOpen();
+
+        foreach (array_keys($session) as $key) {
+            switch ($key) {
+                case 'user':
+                    $result['user'] = empty($this->user)
+                        ? $this->user->toArray($getLink)
+                        : null;
+                    break;
+                case 'openedAt':
+                    $result['openedAt'] = !empty($this->openedAt)
+                        ? $this->openedAt->format('Y-m-d H:m:s')
+                        : null;
+                    break;
+                case 'closedAt':
+                    $result['closedAt'] = !empty($this->closedAt)
+                        ? $this->closedAt->format('Y-m-d H:m:s')
+                        : null;
+                    break;
+                case 'modifiedAt':
+                    $result['modifiedAt'] = !empty($this->modifiedAt)
+                        ? $this->modifiedAt->format('Y-m-d H:m:s')
+                        : null;
+                    break;
+                default:
+                    $result[$key] = $session[$key];
+            }
+        }
+
+        $result['open']    = $this->isOpen();
+        $result['expired'] = $this->isExpired();
+
+        if ($this->isOpen()) {
+            $expirationTime = $this->getExpirationTime();
+            $now = new \DateTime('now');
+
+            $result['expiresAt']     = $expirationTime->format('Y-m-d H:m:s');
+            $result['remainingTime'] = $expirationTime->getTimestamp() - $now->getTimestamp();
+        } else {
+            $result['expiresAt']     = null;
+            $result['remainingTime'] = null;
+        }
+
+        $link = Helper\HttpServerVars::getHttpHost() .
+            '/user/'.$this->getUser()->getHash() . '/session/'. $this->getHash();
+
+        if ($getLink) {
+            $result['link'] = $link;
+        }
+
+        return $result;
     }
 }

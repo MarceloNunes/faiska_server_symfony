@@ -13,6 +13,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class UserController extends Controller
 {
@@ -30,28 +31,37 @@ class UserController extends Controller
     {
         $response   = new JsonResponse();
         $repository = new Repository\UserRepository($entityManager);
+        $auth       = new Helper\Authorizator($entityManager);
 
-        $parameters = new Helper\BrowseParameters(
-            Entity\User::CLASS_ALIAS,
-            Entity\User::ORDER_COLUMNS
-        );
+        try {
+            $auth->restrict($auth->isAdmin());
+            $auth->validate();
 
-        $parameters->setCount($repository->countByKeyword($parameters));
+            $parameters = new Helper\BrowseParameters(
+                Entity\User::CLASS_ALIAS,
+                Entity\User::ORDER_COLUMNS
+            );
 
-        $users      = $repository->browseByKeyword($parameters);
-        $data       = array();
+            $parameters->setCount($repository->countByKeyword($parameters));
 
-        /** @var Entity\User $user */
-        foreach ($users as $user) {
-            $data[] = $user->toArray();
+            $users = $repository->browseByKeyword($parameters);
+            $data  = array();
+
+            /** @var Entity\User $user */
+            foreach ($users as $user) {
+                $data[] = $user->toArray();
+            }
+
+            $content = array(
+                'metadata' => $parameters->getMetadata(),
+                'data' => $data
+            );
+
+            return $response->setContent($this->json($content));
+
+        } catch (UnauthorizedHttpException $e) {
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
         }
-
-        $content = array(
-            'metadata' => $parameters->getMetadata(),
-            'data' => $data
-        );
-
-        return $response->setContent($this->json($content));
     }
 
     /**
@@ -65,9 +75,13 @@ class UserController extends Controller
     {
         $response   = new JsonResponse();
         $repository = new Repository\UserRepository($entityManager);
+        $auth       = new Helper\Authorizator($entityManager);
 
         try {
             $user = $repository->getByHash($userHash);
+
+            $auth->restrict($auth->isAdmin() || $auth->isSameUser($user));
+
             $response->setContent($this->json($user->toArray(false)));
         } catch (EntityNotFoundException $e) {
             $response->setStatusCode(Response::HTTP_NOT_FOUND);
@@ -77,6 +91,9 @@ class UserController extends Controller
     }
 
     /**
+     * Users can be inserted both by an unauthenticated user (Sign up)
+     * or by an admin user.
+     *
      * @Route("/user")
      * @Method({"POST"})
      * @param EntityManagerInterface $entityManager
@@ -103,8 +120,12 @@ class UserController extends Controller
     }
 
     /**
+     * This method manages both UpdateColumn (PATCH) and UpdateAll (PUT)
+     * operations. The validator is responsible to filter different rules
+     * for each operations.
+     *
      * @Route("/user/{userHash}")
-     * @Method({"PATCH"})
+     * @Method({"PATCH", "PUT"})
      * @param string $userHash
      * @param EntityManagerInterface $entityManager
      * @return JsonResponse
@@ -123,6 +144,35 @@ class UserController extends Controller
             );
 
             return $response->setContent($this->json($user->toArray()));
+
+        } catch (EntityNotFoundException $e) {
+            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
+
+        } catch (Exception\Http\BadRequestException $badRequest) {
+            return $response
+                ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                ->setContent($this->json($badRequest->getErrors()));
+        }
+    }
+
+    /**
+     * @Route("/user/{userHash}")
+     * @Method({"DELETE"})
+     * @param string $userHash
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
+    public function deleteAction($userHash, EntityManagerInterface $entityManager)
+    {
+        $response = new JsonResponse();
+
+        try {
+            $userRepository = new Repository\UserRepository($entityManager);
+            $userRepository->delete($userHash);
+            return $response;
+
+        } catch (EntityNotFoundException $e) {
+            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
 
         } catch (Exception\Http\BadRequestException $badRequest) {
             return $response

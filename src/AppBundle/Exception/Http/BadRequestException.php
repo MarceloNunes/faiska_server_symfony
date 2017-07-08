@@ -4,7 +4,7 @@ namespace AppBundle\Exception\Http;
 
 class BadRequestException extends \Exception
 {
-    const BLANK_VALUE                 = 'BLANK_VALUE';
+    const MISSING_VALUE               = 'MISSING_VALUE';
     const NULL_VALUE                  = 'NULL_VALUE';
     const INVALID_FORMAT              = 'INVALID_FORMAT';
     const BELOW_MINIMUM_VALUE         = 'BELOW_MINIMUM_VALUE';
@@ -14,6 +14,8 @@ class BadRequestException extends \Exception
     const DATE_IN_THE_PAST            = 'DATE_IN_THE_PAST';
     const DATE_IN_THE_FUTURE          = 'DATE_IN_THE_FUTURE';
     const UNIQUE_KEY_CONSTRAINT_ERROR = 'UNIQUE_KEY_CONSTRAINT_ERROR';
+    const INVALID                     = 'INVALID';
+    const INACTIVE                    = 'INACTIVE';
 
     /** @var array */
     private $errors = array();

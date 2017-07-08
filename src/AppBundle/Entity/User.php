@@ -375,5 +375,4 @@ class User
 
         return $result;
     }
-
 }

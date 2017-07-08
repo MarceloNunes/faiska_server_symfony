@@ -10,7 +10,7 @@ use AppBundle\Controller\Helper;
 use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\QueryBuilder;
 
-class User extends BaseRepository
+class UserRepository extends BaseRepository
 {
     /**
      * UserRepository constructor.
@@ -46,7 +46,7 @@ class User extends BaseRepository
 
     /**
      * @param Helper\BrowseParameters $parameters
-     * @return User[]
+     * @return UserRepository[]
      */
     public function browseByKeyword(Helper\BrowseParameters $parameters)
     {
@@ -103,13 +103,13 @@ class User extends BaseRepository
      */
     public function insert(Helper\UnifiedRequest $request, $ctrlValidator)
     {
-        $userValidator = new Validator\User($request);
-        $userValidator->validate($this->entityManager, $ctrlValidator);
+        $userValidator = new Validator\UserValidator($request);
+        $userValidator->validateFormData($this->entityManager, $ctrlValidator);
 
         $user = new Entity\User();
         $user
             ->setEmail($request->get('email'))
-            ->setSecret($request->get('secret'))
+            ->setPassword($request->get('password'))
             ->setName($request->get('name'))
             ->setCreatedAt(new \DateTime('now'))
             ->setHash()
@@ -151,8 +151,8 @@ class User extends BaseRepository
             throw new EntityNotFoundException();
         }
 
-        $userValidator = new Validator\User($request);
-        $userValidator->validate($this->entityManager, $ctrlValidator, $user->getId());
+        $userValidator = new Validator\UserValidator($request);
+        $userValidator->validateFormData($this->entityManager, $ctrlValidator, $user->getId());
 
         if ($request->isProvided('name')) {
             $user->setName($request->get('name'));
@@ -162,8 +162,11 @@ class User extends BaseRepository
             $user->setEmail($request->get('email'));
         }
 
-        if ($request->isProvided('secret')) {
-            $user->setSecret($request->get('secret'));
+        // Password is mandatory on isInsert (POST) and can only be changed on
+        // isUpdateColumn (PATCH) call. The value is discarded on isUpdateAll
+        // (POST) call.
+        if (($request->isInsert() || $request->isUpdateColumn()) && $request->isProvided('password')) {
+            $user->setPassword($request->get('password'));
         }
 
         if ($request->isProvided('active')) {
@@ -191,4 +194,26 @@ class User extends BaseRepository
 
         return $user;
     }
+
+    /**
+     * @param $userHash
+     * @throws EntityNotFoundException
+     * @throws BadRequestException
+     */
+    public function delete($userHash)
+    {
+        /** @var Entity\User $user */
+        $user = $this
+            ->entityManager
+            ->getRepository(Entity\User::CLASS_NAME)
+            ->findOneByHash($userHash);
+
+        if (!$user) {
+            throw new EntityNotFoundException();
+        }
+
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
+    }
+
 }

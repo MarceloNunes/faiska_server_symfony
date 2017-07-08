@@ -119,4 +119,64 @@ class UnifiedRequest
 
         return $unifiedRequest;
     }
+
+    /**
+     * @return bool|null
+     */
+    public function isInsert()
+    {
+        if (!empty($this->request)) {
+            return $this->request->getMethod() === 'POST';
+        }
+
+        return null;
+    }
+
+    /**
+     * @return bool|null
+     */
+    public function isUpdate()
+    {
+        if (!empty($this->request)) {
+            return in_array($this->request->getMethod(), array('PUT', 'PATCH'));
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @return bool|null
+     */
+    public function isUpdateColumn()
+    {
+        if (!empty($this->request)) {
+            return $this->request->getMethod() === 'PATCH';
+        }
+
+        return null;
+    }
+    /**
+     * @return bool|null
+     */
+    public function isUpdateAll()
+    {
+        if (!empty($this->request)) {
+            return $this->request->getMethod() === 'PUT';
+        }
+
+        return null;
+    }
+
+    /**
+     * @return bool|null
+     */
+    public function isDelete()
+    {
+        if (!empty($this->request)) {
+            return $this->request->getMethod() === 'DELETE';
+        }
+
+        return null;
+    }
 }

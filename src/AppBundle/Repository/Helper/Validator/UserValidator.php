@@ -6,7 +6,6 @@ use AppBundle\Controller\Helper;
 use AppBundle\Entity;
 use AppBundle\Exception\Http\BadRequestException;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Validator\Constraints;
 
 class UserValidator
 {
@@ -27,13 +26,12 @@ class UserValidator
 
     /**
      * @param EntityManagerInterface $entityManager
-     * @param $ctrlValidator
      * @param int $userId
      * @throws BadRequestException
      */
-    public function validate(EntityManagerInterface $entityManager, $ctrlValidator, $userId = 0)
+    public function validateFormData(EntityManagerInterface $entityManager, $userId = 0)
     {
-        $this->validateEmail($entityManager, $ctrlValidator, $userId);
+        $this->validateEmail($entityManager, $userId);
         $this->validatePassword();
         $this->validateName();
         $this->validateBirthDate();
@@ -44,23 +42,37 @@ class UserValidator
     }
 
     /**
+     * @throws BadRequestException
+     */
+    public function validateLoginData()
+    {
+        if (!$this->request->isProvided('email')) {
+            $this->badRequest->addError('email', BadRequestException::MISSING_VALUE);
+        } elseif (!$this->checkValidEmail()) {
+            $this->badRequest->addError('email', BadRequestException::INVALID_FORMAT);
+        }
+
+        if (!$this->request->isProvided('password')) {
+            $this->badRequest->addError('password', BadRequestException::MISSING_VALUE);
+        } elseif (!$this->checkValidPassword()) {
+            $this->badRequest->addError('password', BadRequestException::INVALID_FORMAT);
+        }
+
+        if (!empty($this->badRequest->getErrors())) {
+            throw $this->badRequest;
+        }
+    }
+
+    /**
      * @param EntityManagerInterface $entityManager
-     * @param $ctrlValidator
      * @param int $userId
      */
-    private function validateEmail(EntityManagerInterface $entityManager, $ctrlValidator, $userId)
+    private function validateEmail(EntityManagerInterface $entityManager, $userId)
     {
-        if ($this->request->getRequest()->getMethod() !== 'PATCH'
-            && !$this->request->isProvided('email')
-        ) {
-            $this->badRequest->addError('email', BadRequestException::BLANK_VALUE);
+        if (!$this->request->isUpdateColumn() && !$this->request->isProvided('email')) {
+            $this->badRequest->addError('email', BadRequestException::MISSING_VALUE);
         } else {
-            $emailError = $ctrlValidator->validate(
-                $this->request->get('email'),
-                new Constraints\Email()
-            );
-
-            if (!empty((string) $emailError)) {
+            if (!$this->checkValidEmail()) {
                 $this->badRequest->addError('email', BadRequestException::INVALID_FORMAT);
             } else {
                 /** @var Entity\User $otherUser */
@@ -82,15 +94,13 @@ class UserValidator
      */
     private function validatePassword()
     {
-        if ($this->request->getRequest()->getMethod() !== 'PATCH' &&
-            !$this->request->isProvided('password')
-        ) {
-            $this->badRequest->addError('password', BadRequestException::BLANK_VALUE);
-        } else {
-
-            // Checking if password hash is a valid hex string of lenght 32
-            if (!preg_match('/^[a-f0-9]{32}$/', $this->request->get('password'))) {
+        if ($this->request->isProvided('password')) {
+            if ($this->checkValidPassword()) {
                 $this->badRequest->addError('password', BadRequestException::INVALID_FORMAT);
+            }
+        } else {
+            if ($this->request->isInsert()) {
+                $this->badRequest->addError('password', BadRequestException::MISSING_VALUE);
             }
         }
     }
@@ -100,10 +110,8 @@ class UserValidator
      */
     private function validateName()
     {
-        if ($this->request->getRequest()->getMethod() !== 'PATCH' &&
-            !$this->request->isProvided('name')
-        ) {
-            $this->badRequest->addError('name', BadRequestException::BLANK_VALUE);
+        if (!$this->request->isUpdateColumn() && !$this->request->isProvided('name')) {
+            $this->badRequest->addError('name', BadRequestException::MISSING_VALUE);
         }
     }
 
@@ -119,5 +127,21 @@ class UserValidator
                 $this->badRequest->addError('birthDate', BadRequestException::INVALID_FORMAT);
             }
         }
+    }
+
+    /**
+     * @return bool
+     */
+    private function checkValidEmail()
+    {
+        return filter_var( $this->request->get('email'), FILTER_VALIDATE_EMAIL);
+    }
+
+    /**
+     * @return bool
+     */
+    private function checkValidPassword()
+    {
+        return preg_match('/^[a-f0-9]{32}$/', $this->request->get('password'));
     }
 }
