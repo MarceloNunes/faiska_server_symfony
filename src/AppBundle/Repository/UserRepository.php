@@ -86,7 +86,9 @@ class UserRepository extends BaseRepository
         $user = $this
             ->entityManager
             ->getRepository(Entity\User::CLASS_NAME)
-            ->findOneByHash($userHash);
+            ->findOneBy(array(
+               'hash' => $userHash
+            ));
 
         if (!$user) {
             throw new EntityNotFoundException();
@@ -96,15 +98,15 @@ class UserRepository extends BaseRepository
     }
 
     /**
-     * @param Helper\UnifiedRequest $request
-     * @param $ctrlValidator
      * @return Entity\User
      * @throws BadRequestException
      */
-    public function insert(Helper\UnifiedRequest $request, $ctrlValidator)
+    public function insert()
     {
+        $request = Helper\UnifiedRequest::createFromGlobals();
+
         $userValidator = new Validator\UserValidator($request);
-        $userValidator->validateFormData($this->entityManager, $ctrlValidator);
+        $userValidator->validateFormData($this->entityManager);
 
         $user = new Entity\User();
         $user
@@ -132,27 +134,17 @@ class UserRepository extends BaseRepository
     }
 
     /**
-     * @param $userHash
-     * @param Helper\UnifiedRequest $request
-     * @param $ctrlValidator
+     * @param Entity\User $user
      * @return Entity\User
      * @throws EntityNotFoundException
      * @throws BadRequestException
      */
-    public function update($userHash, Helper\UnifiedRequest $request, $ctrlValidator)
+    public function update($user)
     {
-        /** @var Entity\User $user */
-        $user = $this
-            ->entityManager
-            ->getRepository(Entity\User::CLASS_NAME)
-            ->findOneByHash($userHash);
-
-        if (!$user) {
-            throw new EntityNotFoundException();
-        }
+        $request = Helper\UnifiedRequest::createFromGlobals();
 
         $userValidator = new Validator\UserValidator($request);
-        $userValidator->validateFormData($this->entityManager, $ctrlValidator, $user->getId());
+        $userValidator->validateFormData($this->entityManager, $user->getId());
 
         if ($request->isProvided('name')) {
             $user->setName($request->get('name'));
@@ -196,24 +188,13 @@ class UserRepository extends BaseRepository
     }
 
     /**
-     * @param $userHash
+     * @param Entity\User $user
      * @throws EntityNotFoundException
      * @throws BadRequestException
      */
-    public function delete($userHash)
+    public function delete($user)
     {
-        /** @var Entity\User $user */
-        $user = $this
-            ->entityManager
-            ->getRepository(Entity\User::CLASS_NAME)
-            ->findOneByHash($userHash);
-
-        if (!$user) {
-            throw new EntityNotFoundException();
-        }
-
         $this->entityManager->remove($user);
         $this->entityManager->flush();
     }
-
 }

@@ -22,13 +22,14 @@ class LoginRepository extends BaseRepository
     }
 
     /**
-     * @param Helper\UnifiedRequest $request
      * @return array
      * @throws EntityNotFoundException
      * @throws BadRequestException
      */
-    public function login(Helper\UnifiedRequest $request)
+    public function login()
     {
+        $request = Helper\UnifiedRequest::createFromGlobals();
+
         $userValidator = new UserValidator($request);
         $userValidator->validateLoginData();
 
@@ -80,5 +81,15 @@ class LoginRepository extends BaseRepository
                 throw $badRequest;
             }
         }
+    }
+
+    /**
+     * @param Entity\Session $session
+     */
+    public function logout (Entity\Session $session)
+    {
+        $session->close();
+        $this->entityManager->persist($session);
+        $this->entityManager->flush();
     }
 }

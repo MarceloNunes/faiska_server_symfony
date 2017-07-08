@@ -78,16 +78,26 @@ class UserController extends Controller
         $auth       = new Helper\Authorizator($entityManager);
 
         try {
+            // If it is not logged in, then it won't even try to fetch the user.
+            $auth->restrict($auth->isLoggedIn());
+            $auth->validate();
+
             $user = $repository->getByHash($userHash);
 
+            // Admin user can get info from any user. Regular user only get info about himself.
             $auth->restrict($auth->isAdmin() || $auth->isSameUser($user));
+            $auth->validate();
 
             $response->setContent($this->json($user->toArray(false)));
-        } catch (EntityNotFoundException $e) {
-            $response->setStatusCode(Response::HTTP_NOT_FOUND);
-        }
 
-        return $response;
+            return $response;
+
+        } catch (EntityNotFoundException $e) {
+            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
+
+        } catch (UnauthorizedHttpException $e) {
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+        }
     }
 
     /**
@@ -103,12 +113,16 @@ class UserController extends Controller
     {
         $response       = new JsonResponse();
         $userRepository = new Repository\UserRepository($entityManager);
+        $auth           = new Helper\Authorizator($entityManager);
 
         try {
-            $user = $userRepository->insert(
-                Helper\UnifiedRequest::createFromGlobals(),
-                $this->get('validator')
-            );
+            // That is a tricky one: To create an new user the caller must be either
+            // a guest user (not logged in) or and admin user.Regualr users can not
+            // add new users.
+            $auth->restrict(!$auth->isLoggedIn() || $auth->isAdmin());
+            $auth->validate();
+
+            $user = $userRepository->insert();
 
             return $response->setContent($this->json($user->toArray()));
 
@@ -116,6 +130,9 @@ class UserController extends Controller
             return $response
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->setContent($this->json($badRequest->getErrors()));
+
+        } catch (UnauthorizedHttpException $e) {
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
         }
     }
 
@@ -132,16 +149,20 @@ class UserController extends Controller
      */
     public function updateAction($userHash, EntityManagerInterface $entityManager)
     {
-        $response = new JsonResponse();
+        $response       = new JsonResponse();
+        $userRepository = new Repository\UserRepository($entityManager);
+        $auth           = new Helper\Authorizator($entityManager);
 
         try {
-            $userRepository = new Repository\UserRepository($entityManager);
+            $auth->restrict($auth->isLoggedIn());
+            $auth->validate();
 
-            $user = $userRepository->update(
-                $userHash,
-                Helper\UnifiedRequest::createFromGlobals(),
-                $this->get('validator')
-            );
+            $user = $userRepository->getByHash($userHash);
+
+            $auth->restrict($auth->isAdmin() || $auth->isSameUser($user));
+            $auth->validate();
+
+            $user = $userRepository->update($user);
 
             return $response->setContent($this->json($user->toArray()));
 
@@ -152,6 +173,9 @@ class UserController extends Controller
             return $response
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->setContent($this->json($badRequest->getErrors()));
+
+        } catch (UnauthorizedHttpException $e) {
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
         }
     }
 
@@ -164,11 +188,18 @@ class UserController extends Controller
      */
     public function deleteAction($userHash, EntityManagerInterface $entityManager)
     {
-        $response = new JsonResponse();
+        $response       = new JsonResponse();
+        $userRepository = new Repository\UserRepository($entityManager);
+        $auth           = new Helper\Authorizator($entityManager);
 
         try {
-            $userRepository = new Repository\UserRepository($entityManager);
-            $userRepository->delete($userHash);
+            $auth->restrict($auth->isAdmin());
+            $auth->validate();
+
+            $user = $userRepository->getByHash($userHash);
+
+            $userRepository->delete($user);
+
             return $response;
 
         } catch (EntityNotFoundException $e) {
@@ -178,6 +209,9 @@ class UserController extends Controller
             return $response
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->setContent($this->json($badRequest->getErrors()));
+
+        } catch (UnauthorizedHttpException $e) {
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
         }
     }
 }

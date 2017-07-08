@@ -348,7 +348,7 @@ class User
 
         foreach (array_keys($user) as $key) {
             switch ($key) {
-                case 'secret':
+                case 'password':
                     break;
                 case 'sessions':
                     break;

@@ -41,20 +41,14 @@ class Authorizator
     public function validate()
     {
         if ($this->authError) {
-
-            // Session must be persisted before Exception is raised because
-            // eventually it could have been closed by timeout.
             if (!empty($this->session)) {
-                $this->entityManager->persist($this->session);
-                $this->entityManager->flush();
+                $this->updateLastModifiedTime();
             }
 
             throw new UnauthorizedHttpException('Unauthorized');
         }
 
-        $this->session->modify();
-        $this->entityManager->persist($this->session);
-        $this->entityManager->flush();
+        $this->updateLastModifiedTime();
     }
 
     private function openSession() {
@@ -98,5 +92,23 @@ class Authorizator
     {
         $this->openSession();
         return $this->isLoggedIn() && $this->session->getUser()->getHash() === $user->getHash();
+    }
+
+    /**
+     *
+     */
+    private function updateLastModifiedTime()
+    {
+        $this->session->modify();
+        $this->entityManager->persist($this->session);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * @return Entity\Session
+     */
+    public function getSession()
+    {
+        return $this->session;
     }
 }
