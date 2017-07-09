@@ -76,14 +76,13 @@ class SessionController extends Controller
     }
 
     /**
-     * @Route("/user/{userHash}/session/{sessionHash}")
+     * @Route("/session/{sessionHash}")
      * @Method({"GET"})
      * @param EntityManagerInterface $entityManager
-     * @param string $userHash
      * @param string $sessionHash
      * @return JsonResponse
      */
-    public function getByHash(EntityManagerInterface $entityManager, $userHash, $sessionHash)
+    public function getByHash(EntityManagerInterface $entityManager, $sessionHash)
     {
         $response          = new JsonResponse();
         $userRepository    = new UserRepository($entityManager);
@@ -96,24 +95,15 @@ class SessionController extends Controller
 
             $session = $sessionRepository->getByHash($sessionHash);
 
-            if ($session->getUser()->getHash() != $userHash) {
-                throw new BadRequestException();
-            }
-
-//            $auth->restrict($auth->isAdmin() || $auth->isSameUser($user));
-//            $auth->validate();
-
-            return $response->setContent($this->json($session->getUser()->toArray()));
+            return $response->setContent($this->json($session->toArray(array(
+                'getUser' => true
+            ))));
 
         } catch (EntityNotFoundException $e) {
             return $response->setStatusCode(Response::HTTP_NOT_FOUND);
-
-        } catch (BadRequestException $e) {
-            return $response->setStatusCode(Response::HTTP_BAD_REQUEST);
 
         } catch (UnauthorizedHttpException $e) {
             return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
         }
     }
-
 }

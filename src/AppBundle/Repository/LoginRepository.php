@@ -8,6 +8,7 @@ use AppBundle\Exception\Http\BadRequestException;
 use AppBundle\Repository\Helper\Validator\UserValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityNotFoundException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class LoginRepository extends BaseRepository
 {
@@ -72,7 +73,7 @@ class LoginRepository extends BaseRepository
             $badRequest = new BadRequestException();
 
             if (!$user->samePassword($request->get('password'))) {
-                $badRequest->addError('password', BadRequestException::INVALID);
+                throw new UnauthorizedHttpException('Wrong Password');
             } elseif (!$user->isActive()) {
                 $badRequest->addError('email', BadRequestException::INACTIVE);
             }

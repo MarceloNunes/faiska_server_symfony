@@ -1,719 +1,2356 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <title>Faiska RESTful API Documentation</title>
     <style>
-        body { font-family: Calibri, sans-serif; padding: 20px;}
-        table { border-collapse: collapse; border: 1px solid #CCC; max-width: 1000px; }
-        th, td { width: 100%; vertical-align: top; border: 1px solid #CCC; padding: 10px; }
-        th { width: 1px }
-        .code {padding: 5px;}
-        pre, tt, .code {font-family:'Lucida Console', monospace; background-color: #F8F8F8;
-            color: #4b7311;}
-        a, a:hover, a:visited { text-decoration: none; }
-        tr:nth-child(even) {background: #F8F8F8; }
-        tr:nth-child(odd) {background: #F4F4F4; }
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            padding: 0px;
+            margin: 0px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #262626;
+            color: darkseagreen;
+            height: 50px;
+            min-height: 50px;
+            max-height: 50px;
+            display: block;
+            overflow: hidden;
+        }
+
+        .headerTitle {
+            margin: 10px;
+            font-size: 130%;
+            font-weight: bold;
+        }
+
+        .main {
+            display: flex;
+            flex-grow: 1;
+            flex-direction: row;
+        }
+
+        .menu {
+            display: block;
+            min-width: 300px;
+            max-width: 350px;
+            background-color: #F4F4F4;
+            overflow: auto;
+            padding: 10px;
+        }
+
+        .content {
+            flex-grow: 7;
+            overflow: auto;
+        }
+
+        .menuSeparator {
+            font-size: 130%;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .menuItem {
+            margin: 4px 0px 4px 0px;
+            padding: 3px 3px 3px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .5s;
+        }
+
+        .menuItemSelected {
+            background-color: darkseagreen;
+            font-weight: bold;
+        }
+
+        .contentItem {
+            display: none;
+            padding: 15px;
+        }
+
+        table {
+            border-collapse: collapse;
+            border: 1px solid #CCC;
+            max-width: 1000px;
+        }
+
+        th, td {
+            width: 100%;
+            vertical-align: top;
+            border: 1px solid #CCC;
+            padding: 10px;
+        }
+
+        th {
+            width: 1px
+        }
+
+        .code {
+        }
+
+        pre, tt, .code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            background-color: #F8F8F8;
+            color: #4b7311;
+        }
+
+        a, a:hover, a:visited {
+            text-decoration: none;
+        }
+
+        tr:nth-child(even) {
+            background: #F8F8F8;
+        }
+
+        tr:nth-child(odd) {
+            background: #F4F4F4;
+        }
+
+        ul {
+            margin: 0px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        p {
+            margin-top: 0px;
+        }
     </style>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('div.menuItem').click(function () {
+                $('div.menuItem').removeClass('menuItemSelected');
+                $(this).addClass('menuItemSelected');
+                $('div.contentItem').hide();
+                $('#' + $(this).attr('id') + 'Content').show();
+            });
+
+            $('pre').each(function () {
+                var contents = $(this).text().split('\n');
+                console.log(contents);
+
+                if (contents.length > 1) {
+                    var minSpaces = 10000;
+
+                    for (var i = 0; i < contents.length; i++) {
+                        var line = contents[i];
+                        var j = 0;
+
+                        while (j < line.length && line.substr(j, 1) == ' ') {
+                            j++;
+                        }
+
+                        if (j < minSpaces) {
+                            minSpaces = j;
+                        }
+                    }
+
+                    for (var i = 0; i < contents.length; i++) {
+                        contents[i] = contents[i].substr(minSpaces);
+                    }
+
+                    $(this).text(contents.join('\n'));
+                }
+            });
+        });
+
+        setTimeout(function () {
+            $('.menuItem#intro').click();
+        }, 200);
+
+    </script>
 </head>
 <body>
-    <h1>Faiska RESTful API Documentation</h1>
+<div class="header">
+    <div class="headerTitle">
+        Faiska RESTful API Documentation
+    </div>
+</div>
+<div class="main">
+    <div class="menu">
+        <div class="menuItem" id="intro">
+            Introduction to the Faiska Project
+        </div>
 
-    <h2>Sumary</h2>
-    <h3>Login and user operations</h3>
-    <ul>
+        <div class="menuSeparator">
+            Session management
+        </div>
+        <div class="menuItem" id="login">
+            Login/User Authentication
+        </div>
+        <div class="menuItem" id="logout">
+            Logout
+        </div>
+        <div class="menuItem" id="browseUserSessions">
+            Browse the sessions of a user
+        </div>
+        <div class="menuItem" id="getUserSessions">
+            Get session data
+        </div>
 
-        <li><a href="#login">Login/User Authentication</a> </li>
-        <li><a href="#create_user">Create user</a> </li>
-        <li><a href="#update_user">Update user</a> </li>
-        <li><a href="#patch_user">Update user's specific fields</a> </li>
-        <li><a href="#change_password">Change a user's password</a> </li>
-        <li><a href="#delete_user">Delete user</a> </li>
-        <li><a href="#get_user">Get user</a> </li>
-        <li><a href="#list_users">List users</a> </li>
+        <div class="menuSeparator">
+            Users management
+        </div>
+        <div class="menuItem" id="getUser">
+            Get user data
+        </div>
+        <div class="menuItem" id="browseUsers">
+            Browse users
+        </div>
+        <div class="menuItem" id="postUser">
+            Create new user
+        </div>
+        <div class="menuItem" id="putUser">
+            Update user record
+        </div>
+        <div class="menuItem" id="patchUser">
+            Update user columns
+        </div>
+        <div class="menuItem" id="deleteUser">
+            Delete user
+        </div>
+    </div>
+    <div class="content">
 
-        <!--
-            <li><a href="#list_all_sessions">List all sessions</a> </li>
-            <li><a href="#list_users_sessions">List user's sessions</a> </li>
-        -->
-    </ul>
-    <hr>
+        <div class="contentItem" id="introContent">
+            <h1>Faiska <i>(fah-is-kah)</i> Project</h1>
 
-    <h2 id="login">Login/User Authentication</h2>
+            <table>
+                <tr>
+                    <td>
+                        <h3>About this document</h3>
 
-    <table>
-        <tr>
-            <th>Description</th>
-            <td>
-                Gets an email and a password and returns an authentication key
-                stringthat may be passed on the header of all other calls of the
-                same session.
-            </td>
-        </tr>
-        <tr>
-            <th>URL</th>
-            <td><span class="code">/login</span></td>
-        </tr>
-        <tr>
-            <th>Method</th>
-            <td>POST</td>
-        </tr>
-        <tr>
-            <th>URL Parameters</th>
-            <td>None</td>
-        </tr>
-        <tr>
-            <th>Data Parameters</th>
-            <td>
-                <pre>
-"email" : [String] (mandatory),
-"password" : [String] (mandatory)</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Success response</th>
-            <td>
-                Status: <strong> 200 - OK</strong>
-                <pre>
-{
-    "AUTH_KEY" : [String]
+                        <p>
+                            This document describes the RESTful API interface of the Faiska project.
+                        </p>
+
+                        <h3>About the project</h3>
+
+                        <p>
+                            The objective of the Faiska project is to provide a generic point for starting
+                            new web applications. And what a better way to do that then implementing the
+                            login/user management services? The goal of the project is to develop exactly
+                            the same API using different back-end tools and frameworks (PHP/Symfony,
+                            PHP/Laravel, Node.js/Express, Python/Flask, etc) and create different
+                            front-end apps who consumes this API and implements its interface
+                            (Angular, React, Vue.js, Ionic, etc).
+                        </p>
+
+                        <h3>The implementations</h3>
+
+                        <p>
+                            Currently, the Faiska project is implemented on these repositories.
+                        </p>
+
+                        <ul>
+
+                            <h4>Servers (API providers)</h4>
+
+                            <ul>
+                                <li>
+                                    <a href="https://github.com/MarceloNunes/faiska_server_symfony" target="_blank">
+                                        <span class="code"><strong>faiska_server_symfony</strong></span>
+                                        - PHP/Synfony with MySQL database
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <span class="code"><strong>faiska_server_node</strong></span>
+                                        - Node.js/Express.js with Mongo database
+                                    </a>
+                                    <i>(planned)</i>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <span class="code"><strong>faiska_server_python_flask</strong></span>
+                                        - Python/Flask
+                                    </a>
+                                    <i>(planned)</i>
+                                </li>
+                            </ul>
+
+                            <h4>Clients (API consumers)</h4>
+
+                            <ul>
+                                <li>
+                                    <a href="#">
+                                        <span class="code"><strong>faiska_client_angular</strong></span>
+                                        - Simple Angular.js client (aka. Angular.js 1) and Bootstrap
+                                    </a>
+                                    <i>(planned)</i>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <span class="code"><strong>faiska_client_angular4</strong></span>
+                                        - Angular 4 and Typescript
+                                    </a>
+                                    <i>(planned)</i>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <span class="code"><strong>faiska_client_react</strong></span>
+                                        - React
+                                    </a>
+                                    <i>(planned)</i>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <span class="code"><strong>faiska_client_ionic</strong></span>
+                                        - Ionic 3 and Angular 4
+                                    </a>
+                                    <i>(planned)</i>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <span class="code"><strong>faiska_client_vue</strong></span>
+                                        - Vue.js
+                                    </a>
+                                    <i>(planned)</i>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <span class="code"><strong>faiska_client_ember</strong></span>
+                                        - Ember.js
+                                    </a>
+                                    <i>(planned)</i>
+                                </li>
+                            </ul>
+
+                        </ul>
+
+
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+        <div class="contentItem" id="loginContent">
+            <h2>Login/User Authentication</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        Gets an email and a password and returns an authentication key
+                        string that may be passed on the header of all other calls of the
+                        same session.
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td><span class="code">/login</span></td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>POST</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>email</strong> [String, mandatory]</spam>
+                                <p>Must be a valid e-mail address.</p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>password</strong> [String, mandatory]</spam>
+                                <p>Password must be a 32
+                                    characters long string with hex digits only. It must be hashed on client
+                                    side (e.g. MD5 hash).</p>
+                            </li>
+                        </ul>
+                        Example:
+                        <pre>
+                            {
+                                "email"    : "johndoe@abc123.ca",
+                                "password" : "2f62955a415f0e800f908c0fab4756e8"
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - Returns an ahtorization key for that
+                            session to be used on future calls.
+                        </p>
+
+                        <pre>
+                            {
+                                "authKey" : [String]
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>400 - HTTP_BAD_REQUEST</strong>:
+                            Returns an array of errors for each field.
+                            Check out all possible return values:
+                        </p>
+                        <ul>
+                            <li>
+                                Missing e-mail adress:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "MISSING_VALUE"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Invalid format for e-mail adress:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                This user exists but it is currently inactive:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "INACTIVE"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Missing password:
+                                <pre>
+                                    {
+                                        "field": "password",
+                                        "code" : "MISSING_VALUE"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Password must be a 32 characters long string with
+                                hex digits only. It must be hashed on client side (e.g. MD5 hash).
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                        </ul>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            Password does not match.
+                        </p>
+                        <p>
+                            <strong>404 - HTTP_NOT_FOUND</strong>:
+                            There is no user with the given e-mail address.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="contentItem" id="logoutContent">
+            <h2>Logout</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        This operation terminates the current user session. The session to be
+                        closed is identified by the authorization key informed on the request header.
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td><span class="code">/logout</span></td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>GET</strong> or <strong>POST</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>auth-key</strong> [String, mandatory]</spam>
+                                <p>
+                                    The authorization key provided by the login operation.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - No content. The session was successfully terminated.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            An invalid (non-existent, expired or closed) authorization key was provided, or
+                            no authorization key was provided at all.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="contentItem" id="postUserContent">
+            <h2>Create new user</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        Creates a new user. A new user can be created by an administrator
+                        (authentication key references to an admin user) or by a guest (no authentication
+                        key informed). The first user ever created is an admin user. All other users
+                        created by guests are ordinary users. Users created by admin users can be
+                        either admin or ordinary users.
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td><span class="code">/user</span></td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>POST</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>auth-key</strong> [String, optional]</spam>
+                                <p>
+                                    The authorization key provided by the login operation.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>email</strong> [String, mandatory]</spam>
+                                <p>
+                                    Must be a valid e-mail address.
+                                </p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>name</strong> [String, mandatory]</spam>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>password</strong> [String, mandatory]</spam>
+                                <p>
+                                    Password must be a 32 characters long string with hex digits only.
+                                    The password must be hashed on client side (e.g. MD5 hash).
+                                </p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>birthDate</strong> [String, optional]</spam>
+                                <p>
+                                    Must be in the format <span class="code">"YYYY-MM-DD"</span>
+                                </p>
+                            </li>
+                        </ul>
+                        <p>Example:</p>
+                        <pre>
+                            {
+                                "email"     : "johndoe@abc123.ca",
+                                "password"  : "2f62955a415f0e800f908c0fab4756e8",
+                                "name"      : "John Doe",
+                                "birthDate" : "1975-07-08"
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - The user was successfully created. The new record
+                            is returned with all generated values. The returned record also has HATEOAS links to
+                            other information related to this user.
+                        </p>
+                        <p>Example:</p>
+                        <pre>
+                            {
+                                "id"        : 1738,
+                                "hash"      : "66ddc7ca8f5498febc99ba575c1716db817c5666",
+                                "email"     : "johndoe@abc123.ca",
+                                "name"      : "John Doe",
+                                "birthDate" : "1975-07-08",
+                                "admin"     : false,
+                                "createdAt" : "2017-07-08 20:07:38",
+                                "active"    : true,
+                                "sessions"  : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666/sessions",
+                                "link"      : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666"
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>400 - HTTP_BAD_REQUEST</strong>:
+                            Returns an array of errors for each field.
+                            Check out all possible return values:
+                        </p>
+                        <ul>
+                            <li>
+                                Missing e-mail adress:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "MISSING_VALUE"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Invalid format for e-mail address:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                E-mail already registered:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "UNIQUE_KEY_CONSTRAINT_ERROR"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Missing password:
+                                <pre>
+                                    {
+                                        "field": "password",
+                                        "code" : "MISSING_VALUE"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Invalid password. Password must be a 32 characters long string with
+                                hex digits only. It must be hashed on client side (e.g. MD5 hash).
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Missing name:
+                                <pre>
+                                    {
+                                        "field": "name",
+                                        "code" : "MISSING_VALUE"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Invalid format for birth date:
+                                <pre>
+                                    {
+                                        "field": "birthDate",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                        </ul>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            An invalid (non-existent, expired or closed) authorization key was provided, or
+                            a non admin user is trying to create a new user.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="contentItem" id="putUserContent">
+            <h2>Update user record</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        Updates all modifiable fields (except
+                        <spam class="code">"password"</spam>
+                        )
+                        in the user record in one single call. This operation can be perforned by an admin user
+                        or by the user who own the data. Fields
+                        <spam class="code">"admin"</spam>
+                        and
+                        <spam class="code">"active"</spam>
+                        can only be changed by an admin user.
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td>
+                        <p>
+                            <span class="code">/user/:userHash</span>
+                        </p>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>userHash</strong> [String]</spam>
+                                : Mandatory. Identification Hash for the user.
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>PUT</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>auth-key</strong> [String, mandatory]</spam>
+                                <p>
+                                    The authorization key provided by the login operation.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>email</strong> [String, mandatory]</spam>
+                                <p>
+                                    Must be a valid e-mail address.
+                                </p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>name</strong> [String, mandatory]</spam>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>birthDate</strong> [String, optional]</spam>
+                                <p>
+                                    Must be in the format <span class="code">"YYYY-MM-DD"</span>
+                                </p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>active</strong> [boolean, optional]</spam>
+                                <p>
+                                    Ignored if not an admin user session.
+                                </p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>admin</strong> [boolean, optional]</spam>
+                                <p>
+                                    Ignored if not an admin user session.
+                                </p>
+                            </li>
+                        </ul>
+                        Example:
+                        <pre>
+                            {
+                                "email"     : "johndoe@abc123.ca",
+                                "password"  : "2f62955a415f0e800f908c0fab4756e8",
+                                "name"      : "John Doe",
+                                "birthDate" : "1975-07-08",
+                                "admin"     : true,
+                                "active"    : true
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - User data successfully updated. The user record
+                            is returned with all generated values. The returned record also has HATEOAS links to
+                            other information related to this user.
+                        </p>
+                        Example:
+                        <pre>
+                            {
+                                "id"        : 1738,
+                                "hash"      : "66ddc7ca8f5498febc99ba575c1716db817c5666",
+                                "email"     : "johndoe@abc123.ca",
+                                "name"      : "John Doe",
+                                "birthDate" : "1975-07-08",
+                                "admin"     : true,
+                                "createdAt" : "2017-07-08 20:07:38",
+                                "active"    : true,
+                                "sessions"  : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666/sessions",
+                                "link"      : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666"
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>400 - HTTP_BAD_REQUEST</strong>:
+                            Returns an array of errors for each field.
+                            Check out all possible return values:
+                        </p>
+                        <ul>
+                            <li>
+                                Missing e-mail adress:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "MISSING_VALUE"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Invalid format for e-mail address:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                E-mail already registered by another user:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "UNIQUE_KEY_CONSTRAINT_ERROR"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Missing name:
+                                <pre>
+                                    {
+                                        "field": "name",
+                                        "code" : "MISSING_VALUE"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Invalid format for birth date:
+                                <pre>
+                                    {
+                                        "field": "birthDate",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                        </ul>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            An invalid (non-existent, expired or closed) authorization key was provided, or
+                            no authorization key was provided at all, or a not admin user is trying to change data
+                            from other user.
+                        </p>
+                        <p>
+                            <strong>404 - HTTP_NOT_FOUND</strong>:
+                            User not found.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="contentItem" id="patchUserContent">
+            <h2>Update specific user columns</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        Updates one or more columns on the user records.
+                        This operation can be perforned by an admin user
+                        or by the user who own the data. Fields
+                        <spam class="code">"admin"</spam>
+                        and
+                        <spam class="code">"active"</spam>
+                        can only be changed by an admin user.
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td>
+                        <p>
+                            <span class="code">/user/:userHash</span>
+                        </p>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>userHash</strong> [String, mandatory]</spam>
+                                <p>
+                                    Identification Hash for the user.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>PATCH</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>auth-key</strong> [String, mandatory]</spam>
+                                <p>The authorization key provided by the login operation.</p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>email</strong> [String, optional]</spam>
+                                <p>
+                                    Must be a valid e-mail address.
+                                </p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>name</strong> [String, optional]</spam>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>password</strong> [String, optional]</spam>
+                                <p>
+                                    Password must be a 32 characters long string with hex digits only.
+                                    The password must be hashed on client side (e.g. MD5 hash).
+                                </p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>birthDate</strong> [String, optional]</spam>
+                                <p>
+                                    Must be in the format
+                                    <span class="code">"YYYY-MM-DD"</span>
+                                </p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>active</strong> [boolean (1 or 0), optional]</spam>
+                                <p>
+                                    Ignored if not an admin user session.
+                                </p>
+                            </li>
+
+                            <li>
+                                <spam class="code"><strong>admin</strong> [boolean (1 or 0), optional]</spam>
+                                <p>
+                                    Ignored if not an admin user session.
+                                </p>
+                            </li>
+                        </ul>
+                        Example:
+                        <pre>
+                            {
+                                "name"      : "John Doe",
+                                "birthDate" : "1975-07-08",
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - User data successfully updated. The user record
+                            is returned with all generated values. The returned record also has HATEOAS links to
+                            other information related to this user.
+                        </p>
+                        Example:
+                        <pre>
+                            {
+                                "id"        : 1738,
+                                "hash"      : "66ddc7ca8f5498febc99ba575c1716db817c5666",
+                                "email"     : "johndoe@abc123.ca",
+                                "name"      : "John Doe",
+                                "birthDate" : "1975-07-08",
+                                "admin"     : true,
+                                "createdAt" : "2017-07-08 20:07:38",
+                                "active"    : true,
+                                "sessions"  : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666/sessions",
+                                "link"      : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666"
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>400 - HTTP_BAD_REQUEST</strong>:
+                            Returns an array of errors for each field.
+                            Check out all possible return values:
+                        </p>
+                        <ul>
+                            <li>
+                                Invalid format for e-mail address:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                E-mail already registered by another user:
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "UNIQUE_KEY_CONSTRAINT_ERROR"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Invalid password. Password must be a 32 characters long string with
+                                hex digits only. It must be hashed on client side (e.g. MD5 hash).
+                                <pre>
+                                    {
+                                        "field": "email",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                            <li>
+                                Invalid format for birth date:
+                                <pre>
+                                    {
+                                        "field": "birthDate",
+                                        "code" : "INVALID_FORMAT"
+                                    }
+                                </pre>
+                            </li>
+                        </ul>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            An invalid (non-existent, expired or closed) authorization key was provided, or
+                            no authorization key was provided at all, or a not admin user is trying to change data
+                            from other user.
+                        </p>
+                        <p>
+                            <strong>404 - HTTP_NOT_FOUND</strong>:
+                            User not found.
+                        </p>
+                    </td>
+                    <p>
+                        <strong>404 - HTTP_NOT_FOUND</strong>:
+                        User not found.
+                    </p>
+                    </td>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="contentItem" id="deleteUserContent">
+            <h2>Delete a user</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        Deletes a user from the database. Only admin users can perform this operation.
+                        Only users that have never logged in can be deleted.
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td>
+                        <p>
+                            <span class="code">/user/:userHash</span>
+                        </p>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>userHash</strong> [String, mandatory]</spam>
+                                <p>
+                                    Identification Hash for the user.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>DELETE</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>auth-key</strong> [String]</spam>
+                                <p>
+                                    The authorization key provided by the login operation.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - User recorded successfully deleted from the database.
+                            No response is retrieved.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            An invalid (non-existent, expired or closed) authorization key was provided, or
+                            no authorization key was provided at all, or a not admin user is trying to change data
+                            from other user.
+                        </p>
+                        <p>
+                            <strong>404 - HTTP_NOT_FOUND</strong>:
+                            User not found.
+                        </p>
+                        <p>
+                            <strong>405 - HTTP_METHOD_NOT_ALLOWED</strong>:
+                            Admin user tried to delete himself.
+                        </p>
+                        <p>
+                            <strong>412 - HTTP_PRECONDITION_FAILED</strong>:
+                            Could not delete user due to foreign key restriction that can not be deleted in cascade.
+                        </p>
+                        <pre>
+                            {
+                                "restriction" : [String]
+                            }
+                        </pre>
+                        <p>Example: User has logged in already:</p>
+                        <pre>
+                            {
+                                "restriction" : "session"
+                            }
+                        </pre>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="contentItem" id="getUserContent">
+            <h2>Get user data</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        Returns the user's record data.
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td>
+                        <p>
+                            <span class="code">/user/:userHash</span>
+                        </p>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>userHash</strong> [String, madatory]</spam>
+                                <p>
+                                    Identification Hash for the user.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>GET</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>auth-key</strong> [String]</spam>
+                                <p>
+                                    The authorization key provided by the login operation.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - User data successfully retrieved.
+                        </p>
+                        Example:
+
+                        <pre id="getExample">
+                            {
+                                "id"        : 1738,
+                                "hash"      : "66ddc7ca8f5498febc99ba575c1716db817c5666",
+                                "email"     : "johndoe@abc123.ca",
+                                "name"      : "John Doe",
+                                "birthDate" : "1975-07-08",
+                                "admin"     : false,
+                                "createdAt" : "2017-07-08 20:07:38",
+                                "active"    : true,
+                                "sessions"  : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666/sessions",
+                                "link"      : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666"
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            An invalid (non-existent, expired or closed) authorization key was provided, or
+                            no authorization key was provided at all, or a not admin user is trying to view data
+                            from other user.
+                        </p>
+                        <p>
+                            <strong>404 - HTTP_NOT_FOUND</strong>:
+                            User not found.
+                        </p>
+                    </td>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="contentItem" id="browseUsersContent">
+            <h2>Browse users</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        <p>
+                            List users information making use of pagination and keyword searching.
+                            This operation is only available for admin users.
+                        </p>
+                        <p>
+                            This operation does not return bad request errors. All wrong
+                            input parameters are reverted to their default values.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td>
+                        <p>
+                            <span class="code">/users</span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>GET</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>limit</strong> [Integer, optional]</spam>
+                                <p>
+                                    Number of records to be displayed in a single browsing page.
+                                    Default to 10.
+                                </p>
+                            </li>
+                            <li>
+                                <spam class="code"><strong>page</strong> [Integer, optional]</spam>
+                                <p>
+                                    Current browsing page number. Default to 1. If
+                                    <spam class="code"><strong>page</strong></spam> value
+                                    is bigger than the last page number,
+                                    <spam class="code"><strong>page</strong></spam>
+                                    is reverted to the last page number.
+                                </p>
+                            </li>
+                            <li>
+                                <spam class="code"><strong>offset</strong> [Integer, optional]</spam>
+                                <p>
+                                    Number of the first record to be displayed. If
+                                    <spam class="code"><strong>page</strong></spam> is set,
+                                    <spam class="code"><strong>offset</strong></spam> is ignored.
+                                    Default to 0.
+                                </p>
+                            </li>
+                            <li>
+                                <spam class="code"><strong>orderby</strong> [String, optional]</spam>
+                                <p>
+                                    Column to be used for sorting. Default to <spam class="code">"id"</spam>.
+                                </p>
+                            </li>
+                            <li>
+                                <spam class="code"><strong>desc</strong> [Boolean, optional]</spam>
+                                <p>
+                                    Defines the direction of the sorting. If 1 (true), the listing
+                                    will be sorted on a descending order. Default to 0 (false).
+                                </p>
+                            </li>
+                            <li>
+                                <spam class="code"><strong>keywords</strong> [String, optional]</spam>
+                                <p>
+                                    Space separated keywords to be used as query parameters. The result
+                                    listing will return only records that have occurrences of all
+                                    given keywords on either the name or the email fields.
+                                </p>
+                            </li>
+                        </ul>
+                        <p>
+                            Example 1:
+                        </p>
+                        <pre>
+                            ?page=3&limit=100&orderby=name&desc=1&keyword=John
+                        </pre>
+                        <p>
+                            Example 2: Same as Example 1 but using offset parameter
+                        </p>
+                        <pre>
+                            ?offset=200&limit=100&orderby=name&desc=1&keyword=John
+                        </pre>
+
+                    </td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>auth-key</strong> [String, mandatory]</spam>
+                                <p>
+                                    The authorization key provided by the login operation.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - The resulting data is an array with a
+                            <spam class="code">data</spam> field with a list of
+                            <spam class="code">user</spam> objects and a
+                            <spam class="code">metadata</spam> field with information about
+                            the query.
+                        </p>
+                        <p>
+                            If the <spam class="code"><strong>page</strong></spam> is informed,
+                            the <spam class="code"><strong>offset</strong></spam> is calculated
+                            and returned in the metadata. However, if
+                            <spam class="code"><strong>page</strong></spam> is not informed both
+                            <spam class="code"><strong>page</strong></spam> and
+                            <spam class="code"><strong>totalPages</strong></spam> are omitted from the metadata
+                        </p>
+                        <p>
+                            Metadata also includes HATEOAS links to first page, previous page,
+                            next page ad last page. First and previous page links are omitted
+                            when in first page. Next and last page are omitted when in last page.
+                        </p>
+                        Example:
+
+                        <pre>
+                            {
+                                "metadata": {
+                                    "limit"        : 100,
+                                    "offset"       : 200,
+                                    "page"         : 3,
+                                    "totalPages"   : 16,
+                                    "orderBy"      : "name",
+                                    "direction"    : "ASC",
+                                    "count"        : 1543,
+                                    "firstPage"    : "http://localhost:8000/users?page=1&limit=100&orderby=name",
+                                    "previousPage" : "http://localhost:8000/users?page=2&limit=100&orderby=name",
+                                    "nextPage"     : "http://localhost:8000/users?page=4&limit=100&orderby=name",
+                                    "lastPage"     : "http://localhost:8000/users?page=16&limit=100&orderby=name"
+                                },
+                                "data": [
+                                    ......
+                                ]
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            An invalid (non-existent, expired or closed) authorization key was provided, or
+                            no authorization key was provided at all, or a not admin user.
+                        </p>
+                    </td>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="contentItem" id="getUserSessionContent">
+            <h2>Get session data</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        Returns the session data.
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td>
+                        <p>
+                            <span class="code">/session/:sessionHash</span>
+                        </p>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>sessionHash</strong> [String, madatory]</spam>
+                                <p>
+                                    Identification Hash for the session.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>GET</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>auth-key</strong> [String]</spam>
+                                : Mandatory. The authorization key provided by the login operation.
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - Session data successfully retrieved.
+                        </p>
+                        Example:
+                        <pre>
+                            {
+                                "id": 42345,
+                                "hash": "817011cf9f0494daf003aeae471233cbc5c058b3",
+                                "user": {
+                                    "id"        : 1738,
+                                    "hash"      : "66ddc7ca8f5498febc99ba575c1716db817c5666",
+                                    "email"     : "johndoe@abc123.ca",
+                                    "name"      : "John Doe",
+                                    "birthDate" : "1975-07-08",
+                                    "admin"     : false,
+                                    "createdAt" : "2017-07-08 20:07:38",
+                                    "active"    : true,
+                                    "sessions"  : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666/sessions",
+                                    "link"      : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666"
+                                },
+                                "remoteAddress": "127.0.0.1",
+                                "openedAt": "2017-07-08 10:07:21",
+                                "modifiedAt": "2017-07-08 10:07:21",
+                                "closedAt": "2017-07-09 17:07:11",
+                                "timeout": 36000,
+                                "open": false,
+                                "expired": true,
+                                "expiresAt": null,
+                                "remainingTime": null,
+                                "link": "http://localhost:8000/session/817011cf9f0494daf003aeae471233cbc5c058b3"
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            An invalid (non-existent, expired or closed) authorization key was provided, or
+                            no authorization key was provided at all, or a not admin user is trying to view data
+                            from other user.
+                        </p>
+                        <p>
+                            <strong>404 - HTTP_NOT_FOUND</strong>:
+                            Session not found.
+                        </p>
+                    </td>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="contentItem" id="browseUserSessionsContent">
+            <h2>Browse user's session</h2>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        <p>
+                            List the session history of an specific user making use of
+                            pagination and keyword searching.
+                            This operation is only available for admin users.
+                        </p>
+                        <p>
+                            This operation does not return bad request errors. All wrong
+                            input parameters are reverted to their default values.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>URL</th>
+                    <td>
+                        <p>
+                            <span class="code">/user/:userHash/sessions</span>
+                        </p>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>userHash</strong> [String, madatory]</spam>
+                                <p>
+                                    Identification Hash for the user.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td><strong>GET</strong></td>
+                </tr>
+                <tr>
+                    <th>URL Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>limit</strong> [Integer, optional]</spam>
+                                <p>
+                                    Number of records to be displayed in a single browsing page.
+                                    Default to 10.
+                                </p>
+                            </li>
+                            <li>
+                                <spam class="code"><strong>page</strong> [Integer, optional]</spam>
+                                <p>
+                                    Current browsing page number. Default to 1. If
+                                    <spam class="code"><strong>page</strong></spam> value
+                                    is bigger than the last page number,
+                                    <spam class="code"><strong>page</strong></spam>
+                                    is reverted to the last page number.
+                                </p>
+                            </li>
+                            <li>
+                                <spam class="code"><strong>offset</strong> [Integer, optional]</spam>
+                                <p>
+                                    Number of the first record to be displayed. If
+                                    <spam class="code"><strong>page</strong></spam> is set,
+                                    <spam class="code"><strong>offset</strong></spam> is ignored.
+                                    Default to 0.
+                                </p>
+                            </li>
+                            <li>
+                                <spam class="code"><strong>orderby</strong> [String, optional]</spam>
+                                <p>
+                                    Column to be used for sorting. Default to <spam class="code">"createdAt"</spam>.
+                                </p>
+                            </li>
+                            <li>
+                                <spam class="code"><strong>desc</strong> [Boolean, optional]</spam>
+                                <p>
+                                    Defines the direction of the sorting. If 1 (true), the listing
+                                    will be sorted on a descending order. Default to 1 (true).
+                                </p>
+                            </li>
+                        </ul>
+                        <p>
+                            Example 1:
+                        </p>
+                        <pre>
+                            ?page=3&limit=100
+                        </pre>
+                        <p>
+                            Example 2: Same as Example 1 but using offset parameter
+                        </p>
+                        <pre>
+                            ?offset=200&limit=100
+                        </pre>
+
+                    </td>
+                </tr>
+                <tr>
+                    <th>Header Parameters</th>
+                    <td>
+                        <ul>
+                            <li>
+                                <spam class="code"><strong>auth-key</strong> [String, mandatory]</spam>
+                                <p>
+                                    The authorization key provided by the login operation.
+                                </p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Data Parameters</th>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <th>Success response</th>
+                    <td>
+                        <p>
+                            <strong> 200 - OK</strong> - The resulting data is an array with a
+                            <spam class="code">data</spam> field with a list of
+                            <spam class="code">session</spam> objects, and a
+                            <spam class="code">metadata</spam> field with information about
+                            the query.
+                        </p>
+                        <p>
+                            If the <spam class="code"><strong>page</strong></spam> is informed,
+                            the <spam class="code"><strong>offset</strong></spam> is calculated
+                            and returned in the metadata. However, if
+                            <spam class="code"><strong>page</strong></spam> is not informed both
+                            <spam class="code"><strong>page</strong></spam> and
+                            <spam class="code"><strong>totalPages</strong></spam> are omitted from the metadata
+                        </p>
+                        <p>
+                            Metadata also includes HATEOAS links to first page, previous page,
+                            next page ad last page. First and previous page links are omitted
+                            when in first page. Next and last page are omitted when in last page.
+                        </p>
+                        Example:
+
+                        <pre>
+                            {
+                                "metadata": {
+                                    "limit"        : 50,
+                                    "offset"       : 200,
+                                    "page"         : 5,
+                                    "totalPages"   : 9,
+                                    "orderBy"      : "createdAt",
+                                    "direction"    : "DESC",
+                                    "count"        : 436,
+                                    "firstPage"    : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666/sessions?page=1&limit=100",
+                                    "previousPage" : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666/sessions?page=4&limit=100",
+                                    "nextPage"     : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666/sessions?page=6&limit=100",
+                                    "lastPage"     : "http://localhost:8000/user/66ddc7ca8f5498febc99ba575c1716db817c5666/sessions?page=9&limit=100"
+                                },
+                                "data": [
+                                    ......
+                                ]
+                            }
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Error response</th>
+                    <td>
+                        <p>
+                            <strong>401 - HTTP_UNAUTHORIZED</strong>:
+                            An invalid (non-existent, expired or closed) authorization key was provided, or
+                            no authorization key was provided at all, or a not admin user.
+                        </p>
+                    </td>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+
+<!--
+
+[String] (mandatory)
+"password2" : [String] (mandatory)
+"email" : [String] (mandatory)
+"name" : [String] (mandatory)
+"admin" : [Boolean] (mandatory when sent by an admin user)
 }</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Error response</th>
-            <td>
-                Status: <strong>400 - Bad Request</strong> - Mandatory fields not informed
-                <pre>
-{
-    "column" : [String]
-}</pre>
+        </td>
+    </tr>
+    <tr>
+        <th>Success response</th>
+        <td>
+            <strong> Status 201: Created</strong><br/>
+            Returns the record that have been just inserted without the password
 
-
-                 <b>Example 1: </b>
-
-                <pre>
-{
-    "column" : "email",
-}</pre>
-                Status: <strong>422 - Unprocessable Entity</strong> - Login error
-
-            </td>
-        </tr>
-    </table>
-
-    <p><a href="#">Back to top</a></p>
-
-    <h2 id="create_user">Create user</h2>
-
-    <table>
-        <tr>
-            <th>Description</th>
-            <td>
-                Creates a new user. A new user can be created by an administrator
-                (AUTH_KEY references to an admin user)
-                or by a guest (no AUTH_KEY informed). The first user ever created
-                is an admin user. All other users created by guests are ordinary users.
-                Users created by admin users can be either admin or ordinary users.
-            </td>
-        </tr>
-        <tr>
-            <th>URL</th>
-            <td><span class="code">/user</span></td>
-        </tr>
-        <tr>
-            <th>Method</th>
-            <td>POST</td>
-        </tr>
-        <tr>
-            <th>URL Parameters</th>
-            <td>None</td>
-        </tr>
-        <tr>
-            <th>Data Parameters</th>
-            <td>
             <pre>
 {
-    "password1" : [String] (mandatory)
-    "password2" : [String] (mandatory)
-    "email" : [String] (mandatory)
-    "name" : [String] (mandatory)
-    "admin" : [Boolean] (mandatory when sent by an admin user)
+"id" : [Integer],
+"email" : [String],
+"name" : [String],
+"admin" : [Boolean],
+"created_at" : [Datetime],
+"sessions" : [HATEOAS]
 }</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Success response</th>
-            <td>
-                <strong> Status 201: Created</strong><br/>
-                Returns the record that have been just inserted without the password
-
-                <pre>
-{
-    "id" : [Integer],
-    "email" : [String],
-    "name" : [String],
-    "admin" : [Boolean],
-    "created_at" : [Datetime],
-    "sessions" : [HATEOAS]
-}</pre>
-                <b>Example:</b>
-                <pre>
-{
-    "id" : 1234,
-    "email" : "johndoe@johndoe.ca",
-    "name" : "John Doe",
-    "admin" : false,
-    "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
-    "sessions" : "https://localhost:8000/user/1234/sessions"
-}</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Error response</th>
-            <td>
-                <strong>Status 400 - Bad Request:</strong>
-                Mandatory fields not informed<br/><br/>
-
-                <b>Example:</b> (email not informed)
-
-                <pre>
-{
-    "column" : "email",
-}</pre>
-                <strong>Status 401 - Unathorized:</strong>
-                AUTH_KEY not informed, invalid or expired.<br/><br/>
-
-                <strong>Status 422 - Unprocessable Entity:</strong>
-                E.g. email already in use.
-
-                <br/><br/>
-
-
-                <b>Example 3:</b>
-
-                <pre>{
-    "column" : "email",
-    "message" : "E-mail already in use."
-}</pre>
-            </td>
-        </tr>
-    </table>
-
-    <p><a href="#">Back to top</a></p>
-
-    <h2 id="update_user">Update user</h2>
-
-    <table>
-        <tr>
-            <th>Description</th>
-            <td>
-                Updates user's data. A ordinary user can update his own data. An admin user can
-                update data from any user.
-            </td>
-        </tr>
-        <tr>
-            <th>URL</th>
-            <td><span class="code">/user/:id</span></td>
-        </tr>
-        <tr>
-            <th>Method</th>
-            <td>PUT</td>
-        </tr>
-        <tr>
-            <th>URL Parameters</th>
-            <td>
-                None
-            </td>
-        </tr>
-        <tr>
-            <th>Data Parameters</th>
-            <td>
+            <b>Example:</b>
             <pre>
 {
-    "email" : [String] (mandatory)
-    "name" : [String] (mandatory)
-    "admin" : [Boolean] (mandatory for admin users, forbidden for ordinary users)
+"id" : 1234,
+"email" : "johndoe@johndoe.ca",
+"name" : "John Doe",
+"admin" : false,
+"created_at" : "Sat Jun 17 22:13:43 EDT 2017",
+"sessions" : "https://localhost:8000/user/1234/sessions"
 }</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Success response</th>
-            <td>
-                <strong> Status 201: Created</strong><br/>
-                Returns the record that have been just updated, without the password, with the new data
+        </td>
+    </tr>
+    <tr>
+        <th>Error response</th>
+        <td>
+            <strong>Status 400 - Bad Request:</strong>
+            Mandatory fields not informed<br/><br/>
 
-                <pre>
-{
-    "id" : [Integer],
-    "email" : [String],
-    "name" : [String],
-    "admin" : [Boolean],
-    "created_at" : [Datetime],
-    "sessions" : [HATEOAS]
-}</pre>
-                <b>Example:</b>
-                <pre>
-{
-    "id" : 1234,
-    "email" : "johndoe@johndoe.ca",
-    "name" : "John Doe",
-    "admin" : false,
-    "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
-    "sessions" : "https://localhost:8000/user/1234/sessions"
-}</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Error response</th>
-            <td>
-                <strong>Status 400 - Bad Request:</strong>
-                Mandatory fields not informed<br/><br/>
+            <b>Example:</b> (email not informed)
 
-                <b>Example 1:</b> (email not informed)
-
-                <pre>
-{
-    "column" : "email",
-}</pre>
-                <strong>Status 404 - Not Found</strong><br/><br/>
-
-                <strong>Status 401 - Unathorized:</strong>
-                AUTH_KEY not informed, invalid or expired. Or an ordinary user tried
-                to edit data from another user.<br/><br/>
-
-                <strong>Status 422 - Unprocessable Entity:</strong>
-
-                <br/><br/>
-
-                <b>Example 3:</b> E-mail already in use by other user.
-
-                <pre>{
-    "column" : "email",
-    "message" : "E-mail already in use by other user"
-}</pre>
-
-                <b>Example 4:</b> Ordinary user tried to change his admin status.
-
-                <pre>{
-    "column" : "admin",
-    "message" : "Cannot change admin status."
-}</pre>
-            </td>
-        </tr>
-    </table>
-
-    <p><a href="#">Back to top</a></p>
-
-    <h2 id="patch_user">Update user's specific fields</h2>
-
-    <table>
-        <tr>
-            <th>Description</th>
-            <td>
-                Updates specific fields of a user's data. A ordinary user can update his
-                own data. An admin user can update data from any user.
-            </td>
-        </tr>
-        <tr>
-            <th>URL</th>
-            <td><span class="code">/user/:id</span></td>
-        </tr>
-        <tr>
-            <th>Method</th>
-            <td>PATCH</td>
-        </tr>
-        <tr>
-            <th>URL Parameters</th>
-            <td>
-                None
-            </td>
-        </tr>
-        <tr>
-            <th>Data Parameters</th>
-            <td>
             <pre>
 {
-    "email" : [String] (optional)
-    "name" : [String] (optional)
-    "admin" : [Boolean] (optional for admin users, forbidden for ordinary users)
+"column" : "email",
 }</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Success response</th>
-            <td>
-                <strong> Status 201: Created</strong><br/>
-                Returns the record that have been just update, without the password and with the new data.
+            <strong>Status 401 - Unathorized:</strong>
+            AUTH_KEY not informed, invalid or expired.<br/><br/>
 
-                <pre>
+            <strong>Status 422 - Unprocessable Entity:</strong>
+            E.g. email already in use.
+
+            <br/><br/>
+
+
+            <b>Example 3:</b>
+
+            <pre>{
+"column" : "email",
+"message" : "E-mail already in use."
+}</pre>
+        </td>
+    </tr>
+</table>
+
+<p><a href="#">Back to top</a></p>
+
+<h2 id="update_user">Update user</h2>
+
+<table>
+    <tr>
+        <th>Description</th>
+        <td>
+            Updates user's data. A ordinary user can update his own data. An admin user can
+            update data from any user.
+        </td>
+    </tr>
+    <tr>
+        <th>URL</th>
+        <td><span class="code">/user/:userHash</span></td>
+    </tr>
+    <tr>
+        <th>Method</th>
+        <td>PUT</td>
+    </tr>
+    <tr>
+        <th>URL Parameters</th>
+        <td>
+            None
+        </td>
+    </tr>
+    <tr>
+        <th>Data Parameters</th>
+        <td>
+        <pre>
 {
-    "id" : [Integer],
-    "email" : [String],
-    "name" : [String],
-    "admin" : [Boolean],
-    "created_at" : [Datetime],
-    "sessions" : [HATEOAS]
+"email" : [String] (mandatory)
+"name" : [String] (mandatory)
+"admin" : [Boolean] (mandatory for admin users, forbidden for ordinary users)
 }</pre>
-                <b>Example:</b>
-                <pre>
-{
-    "id" : 1234,
-    "email" : "johndoe@johndoe.ca",
-    "name" : "John Doe",
-    "admin" : false,
-    "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
-    "sessions" : "https://localhost:8000/user/1234/sessions"
-}</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Error response</th>
-            <td>
-                <strong>Status 404 - Not Found</strong><br/><br/>
+        </td>
+    </tr>
+    <tr>
+        <th>Success response</th>
+        <td>
+            <strong> Status 201: Created</strong><br/>
+            Returns the record that have been just updated, without the password, with the new data
 
-                <strong>Status 400 - Bad Request:</strong>
-                At least one optional field must be informed.<br/><br/>
-
-
-                <strong>Status 401 - Unathorized:</strong>
-                AUTH_KEY not informed, invalid or expired. Or an ordinary user tried
-                to edit data from another user.<br/><br/>
-
-                <strong>Status 422 - Unprocessable Entity:</strong>
-
-                <br/><br/>
-
-                <b>Example 3:</b> E-mail already in use by other user.
-
-                <pre>{
-    "column" : "email",
-    "message" : "E-mail already in use by other user"
-}</pre>
-
-                <b>Example 4:</b> Ordinary user tried to change his admin status.
-
-                <pre>{
-    "column" : "admin",
-    "message" : "Cannot change admin status."
-}</pre>
-            </td>
-        </tr>
-    </table>
-
-    <p><a href="#">Back to top</a></p>
-
-    <h2 id="change_password">Change a user's password</h2>
-
-    <table>
-        <tr>
-            <th>Description</th>
-            <td>
-                Change a user's password. A ordinary user can change his own password.
-                An admin user can change the password from any user.
-            </td>
-        </tr>
-        <tr>
-            <th>URL</th>
-            <td><span class="code">/user/:id/password</span></td>
-        </tr>
-        <tr>
-            <th>Method</th>
-            <td>PUT</td>
-        </tr>
-        <tr>
-            <th>URL Parameters</th>
-            <td>
-                None
-            </td>
-        </tr>
-        <tr>
-            <th>Data Parameters</th>
-            <td>
             <pre>
 {
-    "old_password" : [String] (mandatory for ordinary users, ignored for admin users)
-    "password1"    : [String] (mandatory)
-    "password2"    : [String] (mandatory)
+"id" : [Integer],
+"email" : [String],
+"name" : [String],
+"admin" : [Boolean],
+"created_at" : [Datetime],
+"sessions" : [HATEOAS]
 }</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Success response</th>
-            <td>
-                <strong> Status 204: No Content</strong>
-                </td>
-        </tr>
-        <tr>
-            <th>Error response</th>
-            <td>
-                <strong>Status 400 - Bad Request:</strong>
-                Mandatory fields not informed<br/><br/>
-
-                <b>Example 1:</b> (password1 not informed)
-
-                <pre>
+            <b>Example:</b>
+            <pre>
 {
-    "password1" : "email",
+"id" : 1234,
+"email" : "johndoe@johndoe.ca",
+"name" : "John Doe",
+"admin" : false,
+"created_at" : "Sat Jun 17 22:13:43 EDT 2017",
+"sessions" : "https://localhost:8000/user/1234/sessions"
 }</pre>
-                <strong>Status 401 - Unathorized:</strong>
-                AUTH_KEY not informed, invalid or expired.<br/><br/>
+        </td>
+    </tr>
+    <tr>
+        <th>Error response</th>
+        <td>
+            <strong>Status 400 - Bad Request:</strong>
+            Mandatory fields not informed<br/><br/>
 
-                <strong>Status 405 - Method not allowed:</strong>
-                Ordinary user tried to change the password from another user.<br/><br/>
+            <b>Example 1:</b> (email not informed)
 
-                <strong>Status 422 - Unprocessable Entity:</strong>
-
-                <br/><br/>
-
-                <b>Example 3:</b> Wrong old password
-
-                <pre>{
-    "column" : "old_password",
-    "message : "Wrong old password"
-}</pre>
-
-                <b>Example 4:</b> Invalid new password
-
-                <pre>{
-    "column" : "password1",
-    "message : "Invalid new password"
-}</pre>
-
-                <b>Example 5:</b> Passwords don't match
-
-                <pre>{
-    "column" : "password2",
-    "message : "Passwords don't match"
-}</pre>
-            </td>
-        </tr>
-    </table>
-
-    <p><a href="#">Back to top</a></p>
-
-    <h2 id="delete_user">Delete user</h2>
-
-    <table>
-        <tr>
-            <th>Description</th>
-            <td>
-                Delete a user. Only admin users can delete users other than himself.
-            </td>
-        </tr>
-        <tr>
-            <th>URL</th>
-            <td><span class="code">/user/:id</span></td>
-        </tr>
-        <tr>
-            <th>Method</th>
-            <td>DELETE</td>
-        </tr>
-        <tr>
-            <th>URL Parameters</th>
-            <td>
-                None
-            </td>
-        </tr>
-        <tr>
-            <th>Data Parameters</th>
-            <td>
-                None
-            </td>
-        </tr>
-        <tr>
-            <th>Error response</th>
-            <td>
-                <strong>Status 404 - Not Found:</strong><br/><br/>
-
-                <strong>Status 401 - Unathorized:</strong>
-                AUTH_KEY not informed, invalid, expired or belongs to an ordinary user.<br/><br/>
-
-                <strong>Status 405 - Method not allowed:</strong>
-                Admin tried to delete himself<br/><br/>
-
-                <strong>Status 412 - Precondition falied:</strong>
-                Could not delete user due to foreign key restriction that can not be
-                deleted in cascade.<br/><br/>
-
-                (*) All errors return no response
-
-            </td>
-        </tr>
-    </table>
-
-    <p><a href="#">Back to top</a></p>
-
-    <h2 id="get_user">Get user</h2>
-
-    <table>
-        <tr>
-            <th>Description</th>
-            <td>
-                Gets user information. ordinary users can only get their own user information, admin users can
-                get information from any user.
-            </td>
-        </tr>
-        <tr>
-            <th>URL</th>
-            <td><span class="code">/user/:id</span></td>
-        </tr>
-        <tr>
-            <th>Method</th>
-            <td>GET</td>
-        </tr>
-        <tr>
-            <th>URL Parameters</th>
-            <td>
-                None
-            </td>
-        </tr>
-        <tr>
-            <th>Data Parameters</th>
-            <td>
-                N/A
-            </td>
-        </tr>
-        <tr>
-            <th>Header Parameters</th>
-            <td><span class="code">AUTH_KEY</span></td>
-        </tr>
-        <tr>
-            <th>Success response</th>
-            <td>
-                <strong> Status 200: OK</strong><br/><br/>
-
-                <b>Example:</b>
-                <pre>
+            <pre>
 {
-    "id" : 1234,
-    "email" : "johndoe@johndoe.ca",
-    "name" : "John Doe",
-    "admin" : false,
-    "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
-    "sessions" : "https://localhost:8000/user/1234/sessions"
+"column" : "email",
 }</pre>
+            <strong>Status 404 - Not Found</strong><br/><br/>
+
+            <strong>Status 401 - Unathorized:</strong>
+            AUTH_KEY not informed, invalid or expired. Or an ordinary user tried
+            to edit data from another user.<br/><br/>
+
+            <strong>Status 422 - Unprocessable Entity:</strong>
+
+            <br/><br/>
+
+            <b>Example 3:</b> E-mail already in use by other user.
+
+            <pre>{
+"column" : "email",
+"message" : "E-mail already in use by other user"
+}</pre>
+
+            <b>Example 4:</b> Ordinary user tried to change his admin status.
+
+            <pre>{
+"column" : "admin",
+"message" : "Cannot change admin status."
+}</pre>
+        </td>
+    </tr>
+</table>
+
+<p><a href="#">Back to top</a></p>
+
+<h2 id="patch_user">Update user's specific fields</h2>
+
+<table>
+    <tr>
+        <th>Description</th>
+        <td>
+            Updates specific fields of a user's data. A ordinary user can update his
+            own data. An admin user can update data from any user.
+        </td>
+    </tr>
+    <tr>
+        <th>URL</th>
+        <td><span class="code">/user/:userHash</span></td>
+    </tr>
+    <tr>
+        <th>Method</th>
+        <td>PATCH</td>
+    </tr>
+    <tr>
+        <th>URL Parameters</th>
+        <td>
+            None
+        </td>
+    </tr>
+    <tr>
+        <th>Data Parameters</th>
+        <td>
+        <pre>
+{
+"email" : [String] (optional)
+"name" : [String] (optional)
+"admin" : [Boolean] (optional for admin users, forbidden for ordinary users)
+}</pre>
+        </td>
+    </tr>
+    <tr>
+        <th>Success response</th>
+        <td>
+            <strong> Status 201: Created</strong><br/>
+            Returns the record that have been just update, without the password and with the new data.
+
+            <pre>
+{
+"id" : [Integer],
+"email" : [String],
+"name" : [String],
+"admin" : [Boolean],
+"created_at" : [Datetime],
+"sessions" : [HATEOAS]
+}</pre>
+            <b>Example:</b>
+            <pre>
+{
+"id" : 1234,
+"email" : "johndoe@johndoe.ca",
+"name" : "John Doe",
+"admin" : false,
+"created_at" : "Sat Jun 17 22:13:43 EDT 2017",
+"sessions" : "https://localhost:8000/user/1234/sessions"
+}</pre>
+        </td>
+    </tr>
+    <tr>
+        <th>Error response</th>
+        <td>
+            <strong>Status 404 - Not Found</strong><br/><br/>
+
+            <strong>Status 400 - Bad Request:</strong>
+            At least one optional field must be informed.<br/><br/>
+
+
+            <strong>Status 401 - Unathorized:</strong>
+            AUTH_KEY not informed, invalid or expired. Or an ordinary user tried
+            to edit data from another user.<br/><br/>
+
+            <strong>Status 422 - Unprocessable Entity:</strong>
+
+            <br/><br/>
+
+            <b>Example 3:</b> E-mail already in use by other user.
+
+            <pre>{
+"column" : "email",
+"message" : "E-mail already in use by other user"
+}</pre>
+
+            <b>Example 4:</b> Ordinary user tried to change his admin status.
+
+            <pre>{
+"column" : "admin",
+"message" : "Cannot change admin status."
+}</pre>
+        </td>
+    </tr>
+</table>
+
+<p><a href="#">Back to top</a></p>
+
+<h2 id="change_password">Change a user's password</h2>
+
+<table>
+    <tr>
+        <th>Description</th>
+        <td>
+            Change a user's password. A ordinary user can change his own password.
+            An admin user can change the password from any user.
+        </td>
+    </tr>
+    <tr>
+        <th>URL</th>
+        <td><span class="code">/user/:userHash/password</span></td>
+    </tr>
+    <tr>
+        <th>Method</th>
+        <td>PUT</td>
+    </tr>
+    <tr>
+        <th>URL Parameters</th>
+        <td>
+            None
+        </td>
+    </tr>
+    <tr>
+        <th>Data Parameters</th>
+        <td>
+        <pre>
+{
+"old_password" : [String] (mandatory for ordinary users, ignored for admin users)
+"password1"    : [String] (mandatory)
+"password2"    : [String] (mandatory)
+}</pre>
+        </td>
+    </tr>
+    <tr>
+        <th>Success response</th>
+        <td>
+            <strong> Status 204: No Content</strong>
             </td>
-        </tr>
-        <tr>
-            <th>Error response</th>
-            <td>
-                <strong>Status 404 - Not found:</strong>
-                <br/><br/>
+    </tr>
+    <tr>
+        <th>Error response</th>
+        <td>
+            <strong>Status 400 - Bad Request:</strong>
+            Mandatory fields not informed<br/><br/>
 
-                <strong>Status 401 - Unathorized:</strong>
-                AUTH_KEY not informed, invalid or expired.<br><br>
+            <b>Example 1:</b> (password1 not informed)
 
-                <strong>Status 405 - Method not allowed:</strong>
-                Ordinary user tries to get information from other users.
-            </td>
-        </tr>
-    </table>
+            <pre>
+{
+"password1" : "email",
+}</pre>
+            <strong>Status 401 - Unathorized:</strong>
+            AUTH_KEY not informed, invalid or expired.<br/><br/>
 
-    <p><a href="#">Back to top</a></p>
+            <strong>Status 405 - Method not allowed:</strong>
+            Ordinary user tried to change the password from another user.<br/><br/>
 
-    <h2 id="list_users">List users</h2>
+            <strong>Status 422 - Unprocessable Entity:</strong>
 
-    <table>
-        <tr>
-            <th>Description</th>
-            <td>
-                List users information. This operation is only available for admin users.
-            </td>
-        </tr>
-        <tr>
-            <th>URL</th>
-            <td><span class="code">/users</span></td>
-        </tr>
-        <tr>
-            <th>Method</th>
-            <td>GET</td>
-        </tr>
-        <tr>
-            <th>URL Parameters</th>
-            <td>
-                <pre>
+            <br/><br/>
+
+            <b>Example 3:</b> Wrong old password
+
+            <pre>{
+"column" : "old_password",
+"message : "Wrong old password"
+}</pre>
+
+            <b>Example 4:</b> Invalid new password
+
+            <pre>{
+"column" : "password1",
+"message : "Invalid new password"
+}</pre>
+
+            <b>Example 5:</b> Passwords don't match
+
+            <pre>{
+"column" : "password2",
+"message : "Passwords don't match"
+}</pre>
+        </td>
+    </tr>
+</table>
+
+<p><a href="#">Back to top</a></p>
+
+<h2 id="delete_user">Delete user</h2>
+
+<table>
+    <tr>
+        <th>Description</th>
+        <td>
+            Delete a user. Only admin users can delete users other than himself.
+        </td>
+    </tr>
+    <tr>
+        <th>URL</th>
+        <td><span class="code">/user/:userHash</span></td>
+    </tr>
+    <tr>
+        <th>Method</th>
+        <td>DELETE</td>
+    </tr>
+    <tr>
+        <th>URL Parameters</th>
+        <td>
+            None
+        </td>
+    </tr>
+    <tr>
+        <th>Data Parameters</th>
+        <td>
+            None
+        </td>
+    </tr>
+    <tr>
+        <th>Error response</th>
+        <td>
+            <strong>Status 404 - Not Found:</strong><br/><br/>
+
+            <strong>Status 401 - Unathorized:</strong>
+            AUTH_KEY not informed, invalid, expired or belongs to an ordinary user.<br/><br/>
+
+            <strong>Status 405 - Method not allowed:</strong>
+            Admin tried to delete himself<br/><br/>
+
+            <strong>Status 412 - Precondition falied:</strong>
+            Could not delete user due to foreign key restriction that can not be
+            deleted in cascade.<br/><br/>
+
+            (*) All errors return no response
+
+        </td>
+    </tr>
+</table>
+
+<p><a href="#">Back to top</a></p>
+
+<h2 id="get_user">Get user</h2>
+
+<table>
+    <tr>
+        <th>Description</th>
+        <td>
+            Gets user information. ordinary users can only get their own user information, admin users can
+            get information from any user.
+        </td>
+    </tr>
+    <tr>
+        <th>URL</th>
+        <td><span class="code">/user/:userHash</span></td>
+    </tr>
+    <tr>
+        <th>Method</th>
+        <td>GET</td>
+    </tr>
+    <tr>
+        <th>URL Parameters</th>
+        <td>
+            None
+        </td>
+    </tr>
+    <tr>
+        <th>Data Parameters</th>
+        <td>
+            N/A
+        </td>
+    </tr>
+    <tr>
+        <th>Header Parameters</th>
+        <td><span class="code">AUTH_KEY</span></td>
+    </tr>
+    <tr>
+        <th>Success response</th>
+        <td>
+            <strong> Status 200: OK</strong><br/><br/>
+
+            <b>Example:</b>
+            <pre>
+{
+"id" : 1234,
+"email" : "johndoe@johndoe.ca",
+"name" : "John Doe",
+"admin" : false,
+"created_at" : "Sat Jun 17 22:13:43 EDT 2017",
+"sessions" : "https://localhost:8000/user/1234/sessions"
+}</pre>
+        </td>
+    </tr>
+    <tr>
+        <th>Error response</th>
+        <td>
+            <strong>Status 404 - Not found:</strong>
+            <br/><br/>
+
+            <strong>Status 401 - Unathorized:</strong>
+            AUTH_KEY not informed, invalid or expired.<br><br>
+
+            <strong>Status 405 - Method not allowed:</strong>
+            Ordinary user tries to get information from other users.
+        </td>
+    </tr>
+</table>
+
+<p><a href="#">Back to top</a></p>
+
+<h2 id="list_users">List users</h2>
+
+<table>
+    <tr>
+        <th>Description</th>
+        <td>
+            List users information. This operation is only available for admin users.
+        </td>
+    </tr>
+    <tr>
+        <th>URL</th>
+        <td><span class="code">/users</span></td>
+    </tr>
+    <tr>
+        <th>Method</th>
+        <td>GET</td>
+    </tr>
+    <tr>
+        <th>URL Parameters</th>
+        <td>
+            <pre>
 limit   : [Integer] (optional) (Defaults to 10)
 page    : [Integer] (optional) (Defaults to 1)
 offset  : [Integer] (optional) (Defaults to 0)
 orderby : [String] (optional) (Defaults to "id")
-                </pre>
-                If <span class="code">offset</span> and <span class="code">page</span> are informed at the same
-                request, <span class="code">offset</span> is ignored.<br><br>
+            </pre>
+            If <span class="code">offset</span> and <span class="code">page</span> are informed at the same
+            request, <span class="code">offset</span> is ignored.<br><br>
 
-                Parameters are not validated. On <strong>Bad requests</strong>,
-                parameters are reset to their default value.<br><br>
+            Parameters are not validated. On <strong>Bad requests</strong>,
+            parameters are reset to their default value.<br><br>
 
-                <b>Example 1:</b> <span class="code">?offset=200&limit=100&orderby=name</span>
-                <br><br>
-                <b>Example 2:</b> <span class="code">?page=3&limit=50</span>
-            </td>
-        </tr>
-        <tr>
-            <th>Data Parameters</th>
-            <td>
-                N/A
-            </td>
-        </tr>
-        <tr>
-            <th>Header Parameters</th>
-            <td><span class="code">AUTH_KEY</span></td>
-        </tr>
-        <tr>
-            <th>Success response</th>
-            <td>
-                <strong> Status 200: OK</strong><br/><br/>
+            <b>Example 1:</b> <span class="code">?offset=200&limit=100&orderby=name</span>
+            <br><br>
+            <b>Example 2:</b> <span class="code">?page=3&limit=50</span>
+        </td>
+    </tr>
+    <tr>
+        <th>Data Parameters</th>
+        <td>
+            N/A
+        </td>
+    </tr>
+    <tr>
+        <th>Header Parameters</th>
+        <td><span class="code">AUTH_KEY</span></td>
+    </tr>
+    <tr>
+        <th>Success response</th>
+        <td>
+            <strong> Status 200: OK</strong><br/><br/>
 
-                <b>Example:</b>
-                <pre>
+            <b>Example:</b>
+            <pre>
 {
-    "metadata" : {
-        "count" : 150,
-        "limit" : 3,
-        "page" : 4,
-        "offset" : 9,
-        "orderby" : "name"
+"metadata" : {
+    "count" : 150,
+    "limit" : 3,
+    "page" : 4,
+    "offset" : 9,
+    "orderby" : "name"
+},
+"data" : {
+    {
+        "id" : 11,
+        "email" : "curly@thestooges.com",
+        "name" : "Curly Howard",
+        "admin" : false,
+        "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
+        "sessions" : "https://localhost:8000/user/11/sessions"
     },
-    "data" : {
-        {
-            "id" : 11,
-            "email" : "curly@thestooges.com",
-            "name" : "Curly Howard",
-            "admin" : false,
-            "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
-            "sessions" : "https://localhost:8000/user/11/sessions"
-        },
-        {
-            "id" : 10,
-            "email" : "larry@thestooges.com",
-            "name" : "Larry Fine",
-            "admin" : false,
-            "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
-            "sessions" : "https://localhost:8000/user/10/sessions"
-        },
-        {
-            "id" : 12,
-            "email" : "moe@thestooges.com",
-            "name" : "Moe Howard",
-            "admin" : false,
-            "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
-            "sessions" : "https://localhost:8000/user/12/sessions"
-        }
+    {
+        "id" : 10,
+        "email" : "larry@thestooges.com",
+        "name" : "Larry Fine",
+        "admin" : false,
+        "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
+        "sessions" : "https://localhost:8000/user/10/sessions"
+    },
+    {
+        "id" : 12,
+        "email" : "moe@thestooges.com",
+        "name" : "Moe Howard",
+        "admin" : false,
+        "created_at" : "Sat Jun 17 22:13:43 EDT 2017",
+        "sessions" : "https://localhost:8000/user/12/sessions"
     }
+}
 }</pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Error response</th>
-            <td>
-                <strong>Status 401 - Unathorized:</strong>
-                AUTH_KEY not informed, invalid, expired or the session user is not
-                an admin user.
-            </td>
-        </tr>
-    </table>
+        </td>
+    </tr>
+    <tr>
+        <th>Error response</th>
+        <td>
+            <strong>Status 401 - Unathorized:</strong>
+            AUTH_KEY not informed, invalid, expired or the session user is not
+            an admin user.
+        </td>
+    </tr>
+</table>
 
-    <p><a href="#">Back to top</a></p>
-
+<p><a href="#">Back to top</a></p>
+-->
 </body>
 </html>

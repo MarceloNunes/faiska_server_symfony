@@ -16,6 +16,10 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 class LoginController extends Controller
 {
     /**
+     * Takes an email and a password as input parameters, matches the corresponding user,
+     * starts a new session and returns an authorization key for that session to be used
+     * on future calls.
+     *
      * @Route("/login")
      * @Method({"POST"})
      * @param EntityManagerInterface $entityManager
@@ -27,7 +31,9 @@ class LoginController extends Controller
 
         try {
             $loginRepository = new LoginRepository($entityManager);
-            $authData = $loginRepository->login(Helper\UnifiedRequest::createFromGlobals());
+
+            $authData = $loginRepository->login();
+
             return $response->setContent($this->json($authData));
 
         } catch (EntityNotFoundException $e) {
@@ -37,6 +43,9 @@ class LoginController extends Controller
             return $response
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->setContent($this->json($badRequest->getErrors()));
+
+        } catch (UnauthorizedHttpException $e) {
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
         }
     }
 

@@ -222,18 +222,36 @@ class Session
         return $nowTimestamp > $expirationTimestamp;
     }
 
-    public function toArray($getLink = true)
+    /**
+     * @param $options
+     * @return array
+     */
+    public function toArray($options)
     {
         $session =  get_object_vars($this);
         $result  = array();
         $this->isOpen();
 
+        if (!is_array($options)) {
+            $options = array();
+        }
+
+        if (!array_key_exists('getLink', $options)) {
+            $options['getLink'] = true;
+        }
+
+        if (!array_key_exists('getUser', $options)) {
+            $options['getUser'] = false;
+        }
+
         foreach (array_keys($session) as $key) {
             switch ($key) {
                 case 'user':
-                    $result['user'] = empty($this->user)
-                        ? $this->user->toArray($getLink)
-                        : null;
+                    if ($options['getUser']) {
+                        $result['user'] = !empty($this->user)
+                            ? $this->user->toArray($options['getLink'])
+                            : null;
+                    }
                     break;
                 case 'openedAt':
                     $result['openedAt'] = !empty($this->openedAt)
@@ -269,10 +287,9 @@ class Session
             $result['remainingTime'] = null;
         }
 
-        $link = Helper\HttpServerVars::getHttpHost() .
-            '/user/'.$this->getUser()->getHash() . '/session/'. $this->getHash();
+        $link = Helper\HttpServerVars::getHttpHost() . '/session/'. $this->getHash();
 
-        if ($getLink) {
+        if ($options['getLink']) {
             $result['link'] = $link;
         }
 

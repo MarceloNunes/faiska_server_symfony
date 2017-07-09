@@ -99,9 +99,11 @@ class Authorizator
      */
     private function updateLastModifiedTime()
     {
-        $this->session->modify();
-        $this->entityManager->persist($this->session);
-        $this->entityManager->flush();
+        if (!empty($this->session)) {
+            $this->session->modify();
+            $this->entityManager->persist($this->session);
+            $this->entityManager->flush();
+        }
     }
 
     /**

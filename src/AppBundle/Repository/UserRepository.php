@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use AppBundle\Controller\Helper;
 use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class UserRepository extends BaseRepository
 {
@@ -194,6 +195,12 @@ class UserRepository extends BaseRepository
      */
     public function delete($user)
     {
+        $sessionRepository = new SessionRepository($this->entityManager);
+
+        if ($sessionRepository->countByUser($user) > 0) {
+            throw new PreconditionFailedHttpException('session');
+        }
+
         $this->entityManager->remove($user);
         $this->entityManager->flush();
     }

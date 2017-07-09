@@ -13,6 +13,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class UserController extends Controller
@@ -198,6 +200,10 @@ class UserController extends Controller
 
             $user = $userRepository->getByHash($userHash);
 
+            if ($user->getId() === $auth->getSession()->getUser()->getId()) {
+                throw new MethodNotAllowedHttpException(array());
+            }
+
             $userRepository->delete($user);
 
             return $response;
@@ -205,10 +211,15 @@ class UserController extends Controller
         } catch (EntityNotFoundException $e) {
             return $response->setStatusCode(Response::HTTP_NOT_FOUND);
 
-        } catch (Exception\Http\BadRequestException $badRequest) {
+        } catch (PreconditionFailedHttpException $precondition) {
             return $response
-                ->setStatusCode(Response::HTTP_BAD_REQUEST)
-                ->setContent($this->json($badRequest->getErrors()));
+                ->setStatusCode(Response::HTTP_PRECONDITION_FAILED)
+                ->setContent($this->json(array(
+                    'restriction' => $precondition->getMessage()
+                )));
+
+        } catch (MethodNotAllowedHttpException $e) {
+            return $response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
 
         } catch (UnauthorizedHttpException $e) {
             return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
