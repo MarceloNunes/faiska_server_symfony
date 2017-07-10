@@ -40,7 +40,7 @@ Implements several Helpers for the Controllers. Some examples:
 
 + [Authorizator](https://github.com/MarceloNunes/faiska_server_symfony/blob/master/src/AppBundle/Controller/Helper/Authorizator.php) Abstracts the checking of access permissions providing a diversity of rules combinations for each operation. 
 
-+ [BrowserParameters](https://github.com/MarceloNunes/faiska_server_symfony/blob/master/src/AppBundle/Controller/Helper/BrowserParameters.php) Abstracts the management of paging  and sorting for browsing operations. This class gets the paging/sorting options from the URL data and creates a normalized parameters object.
++ [BrowseParameters](https://github.com/MarceloNunes/faiska_server_symfony/blob/master/src/AppBundle/Controller/Helper/BrowseParameters.php) Abstracts the management of paging  and sorting for browsing operations. This class gets the paging/sorting options from the URL data and creates a normalized parameters object.
 
 + [UnifiedRequest](https://github.com/MarceloNunes/faiska_server_symfony/blob/master/src/AppBundle/Controller/Helper/UnifiedRequest.php) Synfony has a pretty good `Request` object to extract input data from GET or POST requests. However, as this application handles a wider set of HTTP methods (PUT, PATCH, DELETE, etc), this class unifies the original requests with raw parsed requests for these other methods. 
 
@@ -50,7 +50,7 @@ These classes are the command issuers that are called by the Controllers. They i
 
 This folder\namespace is the equivalent to the **controller** level on a MVC based system.
 
-#### [AppBundle/Repository/Validators](https://github.com/MarceloNunes/faiska_server_symfony/tree/master/src/AppBundle/Repository/Validators)
+#### [AppBundle/Repository/Helper/Validator](https://github.com/MarceloNunes/faiska_server_symfony/tree/master/src/AppBundle/Repository/Helper/Validator)
 
 This folder/namespace separates the vlidation rules from the standard Repository folder. Tasks like checking mandatory parameters, well formed input data or unique keys and foreign keys constraints are performed at this level letting the Repository to focus on the main business rules. 
 
