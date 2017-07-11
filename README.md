@@ -3,7 +3,7 @@
 
 This is a PHP back-end project that showcases the use the **Symfony** framework. This project implements a RESTful API interface that serves a basic login and user management. 
 
-Faiska Project is a personal workout routine for my programming skills, and keeping up to date with new tools in Web Development. The goal of the project is to develop exactly the same API using different back-end tools and frameworks (PHP/Symfony, PHP/Laravel, Node.js/Express, Python/Flask, etc) and create different front-end apps who consumes this API and implements its interface (Angular, React, Vue.js, Ionic, etc).
+Faiska Project is a personal workout routine for my programming skills. A way to keep myself up to date with new tools in Web Development. The goal of the project is to develop exactly the same API using different back-end tools and frameworks (PHP/Symfony, PHP/Laravel, Node.js/Express, Python/Flask, etc) and create different front-end apps who consumes this API and implements its interface (Angular, React, Vue.js, Ionic, etc).
 
 ## API Documentation
 
