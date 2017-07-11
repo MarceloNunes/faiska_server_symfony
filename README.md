@@ -1,13 +1,13 @@
 **Faiska** (*fah-is-kah*) Server - Symfony version
 ==============================================
 
-This is a PHP back-end project that showcases the use the **Symfony** framework. This project implements a RESTful API interface that server a basic login and user management. 
+This is a PHP back-end project that showcases the use the **Symfony** framework. This project implements a RESTful API interface that serves a basic login and user management. 
 
-The objective of the Faiska project is to provide a generic point for  starting new web applications. And what a better way to do that then implementing the login/user management services? The goal of the project is to develop exactly the same API using different back-end tools and frameworks (PHP/Symfony, PHP/Laravel, Node.js/Express, Python/Flask, etc) and create different front-end apps who consumes this API and implements its interface (Angular, React, Vue.js, Ionic, etc).
+Faiska Project is a personal workout routine for my programming skills, and keeping up to date with new tools in Web Development. The goal of the project is to develop exactly the same API using different back-end tools and frameworks (PHP/Symfony, PHP/Laravel, Node.js/Express, Python/Flask, etc) and create different front-end apps who consumes this API and implements its interface (Angular, React, Vue.js, Ionic, etc).
 
 ## API Documentation
 
-This source implements a RESTful API. Refer to  **[api_doc.html](http://htmlpreview.github.io/?https://github.com/MarceloNunes/faiska_server_symfony/blob/master/api_doc.html)** for the API documentation.
+This repository contains an implementation of a RESTful API. Refer to  **[api_doc.html](http://htmlpreview.github.io/?https://github.com/MarceloNunes/faiska_server_symfony/blob/master/api_doc.html)** for the API documentation.
 
 ## Installation instructions
 
@@ -24,9 +24,9 @@ $ php bin/console server:run
 
 Don't forget to provide correct database user and password information. After you install this Faiska Synfony server, you can test it's services using a generic API client like **Postman**.
 
-## Learning about the system structure
+## Structure overview 
 
-To understand how this project is structured you may start taking a lokk at the files contained at the following folders/namespaces.
+Here I describe how this *Faiska Server Synfony* implementation is organized, by highlighting some specific namespaces (folders) and which role they play in the project.
 
 #### [AppBundle/Controller](https://github.com/MarceloNunes/faiska_server_symfony/tree/master/src/AppBundle/Controller)
 
