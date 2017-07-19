@@ -31,7 +31,9 @@ class UserController extends Controller
      */
     public function listAction(EntityManagerInterface $entityManager)
     {
-        $response   = new Helper\ControlledResponse();
+        $response = new Helper\ControlledResponse();
+        $response->addAllowedMethod('GET');
+
         $repository = new Repository\UserRepository($entityManager);
         $auth       = new Helper\Authorizator($entityManager);
 
@@ -75,7 +77,9 @@ class UserController extends Controller
      */
     public function getAction($userHash, EntityManagerInterface $entityManager)
     {
-        $response   = new Helper\ControlledResponse();
+        $response = new Helper\ControlledResponse();
+        $response->addAllowedMethod('GET');
+
         $repository = new Repository\UserRepository($entityManager);
         $auth       = new Helper\Authorizator($entityManager);
 
@@ -112,7 +116,7 @@ class UserController extends Controller
     public function insertAction(EntityManagerInterface $entityManager)
     {
         $response  = new Helper\ControlledResponse();
-        $response->addAlowedMethod('POST');
+        $response->addAllowedMethod('POST');
 
         $userRepository = new Repository\UserRepository($entityManager);
         $auth           = new Helper\Authorizator($entityManager);
@@ -153,9 +157,7 @@ class UserController extends Controller
     public function updateAction($userHash, EntityManagerInterface $entityManager)
     {
         $response = new Helper\ControlledResponse();
-        $response->
-            addAlowedMethod('PATCH')->
-            addAlowedMethod('PUT');
+        $response->addAllowedMethods(array('PATCH', 'PUT'));
 
         $userRepository = new Repository\UserRepository($entityManager);
         $auth           = new Helper\Authorizator($entityManager);
@@ -197,7 +199,7 @@ class UserController extends Controller
     public function deleteAction($userHash, EntityManagerInterface $entityManager)
     {
         $response = new Helper\ControlledResponse();
-        $response->addAlowedMethod('DELETE');
+        $response->addAllowedMethod('DELETE');
 
         $userRepository = new Repository\UserRepository($entityManager);
         $auth           = new Helper\Authorizator($entityManager);

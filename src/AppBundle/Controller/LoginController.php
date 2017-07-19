@@ -29,7 +29,7 @@ class LoginController extends Controller
     public function loginAction(EntityManagerInterface $entityManager)
     {
         $response = new Helper\ControlledResponse();
-        $response->addAlowedMethod('POST');
+        $response->addAllowedMethod('POST');
 
         try {
             $loginRepository = new LoginRepository($entityManager);
@@ -61,9 +61,7 @@ class LoginController extends Controller
     public function logoutAction(EntityManagerInterface $entityManager)
     {
         $response = new Helper\ControlledResponse();
-        $response
-            ->addAlowedMethod('GET')
-            ->addAlowedMethod('POST');
+        $response->addAllowedMethods(array('GET', 'POST'));
 
         $loginRepository = new LoginRepository($entityManager);
         $auth            = new Helper\Authorizator($entityManager);

@@ -27,7 +27,9 @@ class SessionController extends Controller
      */
     public function listByUserAction (EntityManagerInterface $entityManager, $userHash)
     {
-        $response          = new Helper\ControlledResponse();
+        $response = new Helper\ControlledResponse();
+        $response->addAllowedMethod('GET');
+
         $userRepository    = new UserRepository($entityManager);
         $sessionRepository = new SessionRepository($entityManager);
         $auth              = new Helper\Authorizator($entityManager);
@@ -84,7 +86,9 @@ class SessionController extends Controller
      */
     public function getByHash(EntityManagerInterface $entityManager, $sessionHash)
     {
-        $response          = new Helper\ControlledResponse();
+        $response = new Helper\ControlledResponse();
+        $response->addAllowedMethod('GET');
+
         $sessionRepository = new SessionRepository($entityManager);
         $auth              = new Helper\Authorizator($entityManager);
 

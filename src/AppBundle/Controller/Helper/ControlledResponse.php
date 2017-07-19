@@ -6,12 +6,53 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class ControlledResponse
 {
+    const ALLOWED_METHODS = array(
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE',
+        'OPTIONS',
+        'HEAD',
+        'COPY',
+        'LINK',
+        'UNLINK',
+        'PURGE',
+        'LOCK',
+        'UNLOCK',
+        'PROPFIND',
+        'VIEW'
+    );
+
+    const DEFAULT_ALLOWED_HEADERS = array(
+        'accept',
+        'accept-encoding',
+        'accept-language',
+        'authorization',
+        'host',
+        'connection',
+        'content-type',
+        'content-length',
+        'origin',
+        'user-agent'
+    );
+
+    const DEFAULT_ALLOWED_ORIGINS = array(
+        '*'
+    );
+
+    const DEFAULT_ALLOWED_METHODS = array(
+        'GET'
+    );
+
     /** @var  JsonResponse */
     private $response;
-    /** @var  String[] */
+    /** @var  string[] */
     private $allowedMethods = array();
-    /** @var  String[] */
+    /** @var  string[] */
     private $allowedOrigin = array();
+    /** @var string[]  */
+    private $allowedHeaders = array();
 
     /**
      * ControlledResponse constructor.
@@ -50,12 +91,24 @@ class ControlledResponse
     }
 
     /**
+     * @param String[] $methods
+     * @return ControlledResponse
+     */
+    public function addAllowedMethods($methods)
+    {
+        foreach ($methods as $method) {
+            $this->addAllowedMethod($method);
+        }
+        return $this;
+    }
+
+    /**
      * @param String $method
      * @return ControlledResponse
      */
-    public function addAlowedMethod($method)
+    public function addAllowedMethod($method)
     {
-        if (in_array($method, array('GET', 'POST', 'PUT', 'PATCH', 'DELETE')) &&
+        if (in_array($method, self::ALLOWED_METHODS) &&
             !in_array($method, $this->allowedMethods)
         ) {
             $this->allowedMethods[] = $method;
@@ -68,11 +121,11 @@ class ControlledResponse
      */
     public function getAllowedMethods()
     {
-        if (!empty($this->allowedMethods)) {
-            return join(', ', $this->allowedMethods);
-        } else {
-            return 'GET';
+        if (empty($this->allowedMethods)) {
+            $this->allowedMethods = self::DEFAULT_ALLOWED_METHODS;
         }
+
+        return join(', ', $this->allowedMethods);
     }
 
     /**
@@ -91,11 +144,36 @@ class ControlledResponse
      * @return string
      */
     public function getAllowedOrigins() {
-        if (!empty($this->allowedOrigin)) {
-            return join(', ', $this->allowedOrigin);
-        } else {
-            return '*';
+        if (empty($this->allowedOrigin)) {
+            foreach (self::DEFAULT_ALLOWED_ORIGINS as $origin)
+                $this->addAllowedOrigin($origin);
         }
+
+        return join(', ', $this->allowedOrigin);
+    }
+
+    /**
+     * @param $header
+     * @return ControlledResponse
+     */
+    public function addAllowedHeader($header)
+    {
+        if (!in_array($header, $this->allowedHeaders)) {
+            $this->allowedHeaders[] = $header;
+        }
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAllowedHeaders() {
+        if (empty($this->allowedHeaders)) {
+            foreach (self::DEFAULT_ALLOWED_HEADERS as $header)
+                $this->addAllowedHeader($header);
+        }
+
+        return join(', ', $this->allowedHeaders);
     }
 
     /**
@@ -120,6 +198,11 @@ class ControlledResponse
         $this->response->headers->set(
             'Access-Control-Allow-Methods',
             $this->getAllowedMethods()
+        );
+
+        $this->response->headers->set(
+            'Access-Control-Allow-Headers',
+            $this->getAllowedHeaders()
         );
 
         return $this->response;
