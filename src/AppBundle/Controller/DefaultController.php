@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Controller\Helper\ControlledResponse;
 use AppBundle\Entity;
 use Doctrine\ORM\EntityManagerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -9,6 +10,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class DefaultController extends Controller
 {
@@ -26,30 +28,33 @@ class DefaultController extends Controller
     /**
      * @param EntityManagerInterface $entityManager
      * @Route("/test")
-     * @Method({"GET", "PUT", "PATCH", "POST"})
+     * @Method({"GET", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"})
      * @return JsonResponse
      */
     public function testAction(EntityManagerInterface $entityManager)
     {
-        $response = new JsonResponse();
         $request  = Helper\UnifiedRequest::createFromGlobals();
 
-        $authKey = $request->getRequest()->headers->all()['auth-key'];
-
-        $session = $entityManager
-            ->getRepository(Entity\Session::CLASS_NAME)
-            ->findOneBy(array(
-                'hash' => $authKey
-            ));
 
         $date = new \DateTime('now');
 
-        return $response->setContent($this->json(array(
-            'request' => $request->all(),
+        $data = array(
             'timestamp' => $date->getTimestamp().random_int(0, 999999999999),
             'server' => $request->getRequest()->server->all()['REMOTE_ADDR'],
-            'session' => $session->toArray(),
             'header' => $request->getRequest()->headers->all(),
-        )));
+        );
+
+        $response = new ControlledResponse();
+
+        $response
+            ->setStatusCode(200)
+            ->addAlowedMethod('GET')
+            ->addAlowedMethod('POST')
+            ->addAlowedMethod('PUT')
+            ->addAlowedMethod('PATCH')
+            ->addAlowedMethod('DELETE')
+            ->setJsonContent($data);
+
+        return $response->getResult();
     }
 }

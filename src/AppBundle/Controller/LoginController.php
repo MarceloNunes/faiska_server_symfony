@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Controller\Helper;
 use AppBundle\Exception\Http\BadRequestException;
 use AppBundle\Repository\LoginRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,25 +28,27 @@ class LoginController extends Controller
      */
     public function loginAction(EntityManagerInterface $entityManager)
     {
-        $response = new JsonResponse();
+        $response = new Helper\ControlledResponse();
+        $response->addAlowedMethod('POST');
 
         try {
             $loginRepository = new LoginRepository($entityManager);
 
             $authData = $loginRepository->login();
 
-            return $response->setContent($this->json($authData));
+            return $response->setJsonContent($authData)->getResult();
 
         } catch (EntityNotFoundException $e) {
-            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            return $response->setStatusCode(Response::HTTP_NOT_FOUND)->getResult();
 
         } catch (BadRequestException $badRequest) {
             return $response
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
-                ->setContent($this->json($badRequest->getErrors()));
+                ->setJsonContent($badRequest->getErrors())
+                ->getResult();
 
         } catch (UnauthorizedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED)->getResult();
         }
     }
 
@@ -57,7 +60,11 @@ class LoginController extends Controller
      */
     public function logoutAction(EntityManagerInterface $entityManager)
     {
-        $response        = new JsonResponse();
+        $response = new Helper\ControlledResponse();
+        $response
+            ->addAlowedMethod('GET')
+            ->addAlowedMethod('POST');
+
         $loginRepository = new LoginRepository($entityManager);
         $auth            = new Helper\Authorizator($entityManager);
 
@@ -67,10 +74,10 @@ class LoginController extends Controller
 
             $loginRepository->logout($auth->getSession());
 
-            return $response;
+            return $response->getResult();
 
         } catch (UnauthorizedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED)->getResult();
         }
     }
 }

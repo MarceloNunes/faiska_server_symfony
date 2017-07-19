@@ -31,7 +31,7 @@ class UserController extends Controller
      */
     public function listAction(EntityManagerInterface $entityManager)
     {
-        $response   = new JsonResponse();
+        $response   = new Helper\ControlledResponse();
         $repository = new Repository\UserRepository($entityManager);
         $auth       = new Helper\Authorizator($entityManager);
 
@@ -59,10 +59,10 @@ class UserController extends Controller
                 'data' => $data
             );
 
-            return $response->setContent($this->json($content));
+            return $response->setJsonContent($content)->getResult();
 
         } catch (UnauthorizedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED)->getResult();
         }
     }
 
@@ -75,7 +75,7 @@ class UserController extends Controller
      */
     public function getAction($userHash, EntityManagerInterface $entityManager)
     {
-        $response   = new JsonResponse();
+        $response   = new Helper\ControlledResponse();
         $repository = new Repository\UserRepository($entityManager);
         $auth       = new Helper\Authorizator($entityManager);
 
@@ -90,15 +90,13 @@ class UserController extends Controller
             $auth->restrict($auth->isAdmin() || $auth->isSameUser($user));
             $auth->validate();
 
-            $response->setContent($this->json($user->toArray(false)));
-
-            return $response;
+            return $response->setJsonContent($user->toArray(false))->getResult();
 
         } catch (EntityNotFoundException $e) {
-            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            return $response->setStatusCode(Response::HTTP_NOT_FOUND)->getResult();
 
         } catch (UnauthorizedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED)->getResult();
         }
     }
 
@@ -113,7 +111,9 @@ class UserController extends Controller
      */
     public function insertAction(EntityManagerInterface $entityManager)
     {
-        $response       = new JsonResponse();
+        $response  = new Helper\ControlledResponse();
+        $response->addAlowedMethod('POST');
+
         $userRepository = new Repository\UserRepository($entityManager);
         $auth           = new Helper\Authorizator($entityManager);
 
@@ -126,15 +126,16 @@ class UserController extends Controller
 
             $user = $userRepository->insert();
 
-            return $response->setContent($this->json($user->toArray()));
+            return $response->setJsonContent($user->toArray())->getResult();
 
         } catch (Exception\Http\BadRequestException $badRequest) {
             return $response
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
-                ->setContent($this->json($badRequest->getErrors()));
+                ->setJsonContent($badRequest->getErrors())
+                ->getResult();
 
         } catch (UnauthorizedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED)->getResult();
         }
     }
 
@@ -151,7 +152,11 @@ class UserController extends Controller
      */
     public function updateAction($userHash, EntityManagerInterface $entityManager)
     {
-        $response       = new JsonResponse();
+        $response = new Helper\ControlledResponse();
+        $response->
+            addAlowedMethod('PATCH')->
+            addAlowedMethod('PUT');
+
         $userRepository = new Repository\UserRepository($entityManager);
         $auth           = new Helper\Authorizator($entityManager);
 
@@ -166,18 +171,19 @@ class UserController extends Controller
 
             $user = $userRepository->update($user);
 
-            return $response->setContent($this->json($user->toArray()));
+            return $response->setJsonContent($user->toArray())->getResult();
 
         } catch (EntityNotFoundException $e) {
-            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            return $response->setStatusCode(Response::HTTP_NOT_FOUND)->getResult();
 
         } catch (Exception\Http\BadRequestException $badRequest) {
             return $response
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
-                ->setContent($this->json($badRequest->getErrors()));
+                ->setJsonContent($badRequest->getErrors())
+                ->getResult();
 
         } catch (UnauthorizedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED)->getResult();
         }
     }
 
@@ -190,7 +196,9 @@ class UserController extends Controller
      */
     public function deleteAction($userHash, EntityManagerInterface $entityManager)
     {
-        $response       = new JsonResponse();
+        $response = new Helper\ControlledResponse();
+        $response->addAlowedMethod('DELETE');
+
         $userRepository = new Repository\UserRepository($entityManager);
         $auth           = new Helper\Authorizator($entityManager);
 
@@ -206,23 +214,24 @@ class UserController extends Controller
 
             $userRepository->delete($user);
 
-            return $response;
+            return $response->getResult();
 
         } catch (EntityNotFoundException $e) {
-            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            return $response->setStatusCode(Response::HTTP_NOT_FOUND)->getResult();
 
         } catch (PreconditionFailedHttpException $precondition) {
             return $response
                 ->setStatusCode(Response::HTTP_PRECONDITION_FAILED)
-                ->setContent($this->json(array(
+                ->setJsonContent($this->json(array(
                     'restriction' => $precondition->getMessage()
-                )));
+                )))
+                ->getResult();
 
         } catch (MethodNotAllowedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
+            return $response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED)->getResult();
 
         } catch (UnauthorizedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED)->getResult();
         }
     }
 }

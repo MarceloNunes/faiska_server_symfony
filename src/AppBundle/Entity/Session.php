@@ -226,7 +226,7 @@ class Session
      * @param $options
      * @return array
      */
-    public function toArray($options)
+    public function toArray($options = null)
     {
         $session =  get_object_vars($this);
         $result  = array();

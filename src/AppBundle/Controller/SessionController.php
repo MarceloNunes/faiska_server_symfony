@@ -3,8 +3,8 @@
 namespace AppBundle\Controller;
 
 
+use AppBundle\Controller\Helper;
 use AppBundle\Entity;
-use AppBundle\Exception\Http\BadRequestException;
 use AppBundle\Repository\SessionRepository;
 use AppBundle\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,7 +27,7 @@ class SessionController extends Controller
      */
     public function listByUserAction (EntityManagerInterface $entityManager, $userHash)
     {
-        $response          = new JsonResponse();
+        $response          = new Helper\ControlledResponse();
         $userRepository    = new UserRepository($entityManager);
         $sessionRepository = new SessionRepository($entityManager);
         $auth              = new Helper\Authorizator($entityManager);
@@ -65,13 +65,13 @@ class SessionController extends Controller
                 'data'     => $data
             );
 
-            return $response->setContent($this->json($content));
+            return $response->setJsonContent($content)->getResult();
 
         } catch (EntityNotFoundException $e) {
-            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            return $response->setStatusCode(Response::HTTP_NOT_FOUND)->getResult();
 
         } catch (UnauthorizedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED)->getResult();
         }
     }
 
@@ -84,8 +84,7 @@ class SessionController extends Controller
      */
     public function getByHash(EntityManagerInterface $entityManager, $sessionHash)
     {
-        $response          = new JsonResponse();
-        $userRepository    = new UserRepository($entityManager);
+        $response          = new Helper\ControlledResponse();
         $sessionRepository = new SessionRepository($entityManager);
         $auth              = new Helper\Authorizator($entityManager);
 
@@ -95,15 +94,17 @@ class SessionController extends Controller
 
             $session = $sessionRepository->getByHash($sessionHash);
 
-            return $response->setContent($this->json($session->toArray(array(
-                'getUser' => true
-            ))));
+            return $response
+                ->setJsonContent($session->toArray(array(
+                    'getUser' => true
+                )))
+                ->getResult();
 
         } catch (EntityNotFoundException $e) {
-            return $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            return $response->setStatusCode(Response::HTTP_NOT_FOUND)->getResult();
 
         } catch (UnauthorizedHttpException $e) {
-            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response->setStatusCode(Response::HTTP_UNAUTHORIZED)->getResult();
         }
     }
 }
