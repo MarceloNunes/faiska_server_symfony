@@ -21,7 +21,7 @@ class UserController extends Controller
 {
     /**
      * Returns a browsable list of users according to a list of parameters.
-     * This method has no expectex exceptions. All invalid parameters are
+     * This method has no expected exceptions. All invalid parameters are
      * converted to their default value.
      *
      * @Route("/users")
@@ -35,7 +35,7 @@ class UserController extends Controller
         $response->addAllowedMethod('GET');
 
         $repository = new Repository\UserRepository($entityManager);
-        $auth       = new Helper\Authorizator($entityManager);
+        $auth       = new Helper\Authorizer($entityManager);
 
         try {
             $auth->restrict($auth->isAdmin());
@@ -81,7 +81,7 @@ class UserController extends Controller
         $response->addAllowedMethod('GET');
 
         $repository = new Repository\UserRepository($entityManager);
-        $auth       = new Helper\Authorizator($entityManager);
+        $auth       = new Helper\Authorizer($entityManager);
 
         try {
             // If it is not logged in, then it won't even try to fetch the user.
@@ -119,16 +119,18 @@ class UserController extends Controller
         $response->addAllowedMethod('POST');
 
         $userRepository = new Repository\UserRepository($entityManager);
-        $auth           = new Helper\Authorizator($entityManager);
+        $auth           = new Helper\Authorizer($entityManager);
 
         try {
             // That is a tricky one: To create an new user the caller must be either
-            // a guest user (not logged in) or and admin user.Regualr users can not
+            // a guest user (not logged in) or and admin user.Regular users can not
             // add new users.
             $auth->restrict(!$auth->isLoggedIn() || $auth->isAdmin());
             $auth->validate();
 
-            $user = $userRepository->insert();
+            $user = $userRepository->insert(
+                Helper\UnifiedRequest::createFromGlobals()
+            );
 
             return $response->setJsonContent($user->toArray())->getResult();
 
@@ -160,7 +162,7 @@ class UserController extends Controller
         $response->addAllowedMethods(array('PATCH', 'PUT'));
 
         $userRepository = new Repository\UserRepository($entityManager);
-        $auth           = new Helper\Authorizator($entityManager);
+        $auth           = new Helper\Authorizer($entityManager);
 
         try {
             $auth->restrict($auth->isLoggedIn());
@@ -171,7 +173,10 @@ class UserController extends Controller
             $auth->restrict($auth->isAdmin() || $auth->isSameUser($user));
             $auth->validate();
 
-            $user = $userRepository->update($user);
+            $user = $userRepository->update(
+                $user,
+                Helper\UnifiedRequest::createFromGlobals()
+            );
 
             return $response->setJsonContent($user->toArray())->getResult();
 
@@ -202,7 +207,7 @@ class UserController extends Controller
         $response->addAllowedMethod('DELETE');
 
         $userRepository = new Repository\UserRepository($entityManager);
-        $auth           = new Helper\Authorizator($entityManager);
+        $auth           = new Helper\Authorizer($entityManager);
 
         try {
             $auth->restrict($auth->isAdmin());

@@ -29,7 +29,7 @@ class HttpServerVars
         $routeArray = explode('?', $_SERVER['REQUEST_URI']);
         $route      = $routeArray[0];
 
-        return self::getHttpHost().$route.'?'.http_build_query($query);
+        return $route.'?'.http_build_query($query);
     }
 
 }

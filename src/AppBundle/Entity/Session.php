@@ -2,7 +2,6 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Controller\Helper;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -287,7 +286,7 @@ class Session
             $result['remainingTime'] = null;
         }
 
-        $link = Helper\HttpServerVars::getHttpHost() . '/session/'. $this->getHash();
+        $link = '/session/'. $this->getHash();
 
         if ($options['getLink']) {
             $result['link'] = $link;

@@ -32,7 +32,7 @@ class SessionController extends Controller
 
         $userRepository    = new UserRepository($entityManager);
         $sessionRepository = new SessionRepository($entityManager);
-        $auth              = new Helper\Authorizator($entityManager);
+        $auth              = new Helper\Authorizer($entityManager);
 
         try {
             $auth->restrict($auth->isLoggedIn());
@@ -90,7 +90,7 @@ class SessionController extends Controller
         $response->addAllowedMethod('GET');
 
         $sessionRepository = new SessionRepository($entityManager);
-        $auth              = new Helper\Authorizator($entityManager);
+        $auth              = new Helper\Authorizer($entityManager);
 
         try {
             $auth->restrict($auth->isLoggedIn());

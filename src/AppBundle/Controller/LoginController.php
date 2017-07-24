@@ -34,7 +34,9 @@ class LoginController extends Controller
         try {
             $loginRepository = new LoginRepository($entityManager);
 
-            $authData = $loginRepository->login();
+            $authData = $loginRepository->login(
+                Helper\UnifiedRequest::createFromGlobals()
+            );
 
             return $response->setJsonContent($authData)->getResult();
 
@@ -64,7 +66,7 @@ class LoginController extends Controller
         $response->addAllowedMethods(array('GET', 'POST'));
 
         $loginRepository = new LoginRepository($entityManager);
-        $auth            = new Helper\Authorizator($entityManager);
+        $auth            = new Helper\Authorizer($entityManager);
 
         try {
             $auth->restrict($auth->isLoggedIn());

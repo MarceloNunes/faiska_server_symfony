@@ -25,16 +25,17 @@ class ControlledResponse
     );
 
     const DEFAULT_ALLOWED_HEADERS = array(
-        'accept',
-        'accept-encoding',
-        'accept-language',
-        'authorization',
-        'host',
-        'connection',
-        'content-type',
-        'content-length',
-        'origin',
-        'user-agent'
+        'Accept',
+        'Accept-Encoding',
+        'Accept-Language',
+        'Authorization',
+        'Host',
+        'Connection',
+        'Content-Type',
+        'Content-Length',
+        'Origin',
+        'User-Agent',
+        'Auth-Key'
     );
 
     const DEFAULT_ALLOWED_ORIGINS = array(

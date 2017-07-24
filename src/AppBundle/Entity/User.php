@@ -2,7 +2,6 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Controller\Helper;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints;
 
@@ -366,7 +365,7 @@ class User
             }
         }
 
-        $link               = Helper\HttpServerVars::getHttpHost() . '/user/'.$user['hash'];
+        $link               = '/user/'.$user['hash'];
         $result['sessions'] = $link.'/sessions';
 
         if ($getLink) {

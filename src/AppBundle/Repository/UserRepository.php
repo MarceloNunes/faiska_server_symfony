@@ -99,13 +99,12 @@ class UserRepository extends BaseRepository
     }
 
     /**
+     * @param Helper\UnifiedRequest $request
      * @return Entity\User
      * @throws BadRequestException
      */
-    public function insert()
+    public function insert(Helper\UnifiedRequest $request)
     {
-        $request = Helper\UnifiedRequest::createFromGlobals();
-
         $userValidator = new Validator\UserValidator($request);
         $userValidator->validateFormData($this->entityManager);
 
@@ -136,14 +135,13 @@ class UserRepository extends BaseRepository
 
     /**
      * @param Entity\User $user
+     * @param Helper\UnifiedRequest $request
      * @return Entity\User
      * @throws EntityNotFoundException
      * @throws BadRequestException
      */
-    public function update($user)
+    public function update(Entity\User $user, Helper\UnifiedRequest $request)
     {
-        $request = Helper\UnifiedRequest::createFromGlobals();
-
         $userValidator = new Validator\UserValidator($request);
         $userValidator->validateFormData($this->entityManager, $user->getId());
 
@@ -158,7 +156,9 @@ class UserRepository extends BaseRepository
         // Password is mandatory on isInsert (POST) and can only be changed on
         // isUpdateColumn (PATCH) call. The value is discarded on isUpdateAll
         // (POST) call.
-        if (($request->isInsert() || $request->isUpdateColumn()) && $request->isProvided('password')) {
+        if (($request->isInsert() || $request->isUpdateColumn()) &&
+            $request->isProvided('password')
+        ) {
             $user->setPassword($request->get('password'));
         }
 

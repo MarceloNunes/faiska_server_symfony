@@ -7,7 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
-class Authorizator
+class Authorizer
 {
     /** @var  EntityManagerInterface */
     private $entityManager;
@@ -17,7 +17,7 @@ class Authorizator
     private $session;
 
     /**
-     * Authorizator constructor.
+     * Authorizer constructor.
      * @param EntityManagerInterface $entityManager
      */
     function __construct(EntityManagerInterface $entityManager)
@@ -54,13 +54,13 @@ class Authorizator
     private function openSession() {
         if (empty($this->session)) {
             $request = Request::createFromGlobals();
-            $authKey = $request->headers->get('auth-key');
+            $sessionHash = $request->headers->get('session-hash');
 
-            if ($authKey) {
+            if ($sessionHash) {
                 $this->session = $this->entityManager
                     ->getRepository(Entity\Session::CLASS_NAME)
                     ->findOneBy(array(
-                        'hash' => $authKey
+                        'hash' => $sessionHash
                     ));
             }
         }

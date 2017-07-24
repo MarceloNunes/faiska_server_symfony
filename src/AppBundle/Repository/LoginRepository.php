@@ -12,7 +12,6 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class LoginRepository extends BaseRepository
 {
-
     /**
      * UserRepository constructor.
      * @param EntityManagerInterface $entityManager
@@ -23,14 +22,13 @@ class LoginRepository extends BaseRepository
     }
 
     /**
+     * @param Helper\UnifiedRequest $request
      * @return array
      * @throws EntityNotFoundException
      * @throws BadRequestException
      */
-    public function login()
+    public function login(Helper\UnifiedRequest $request)
     {
-        $request = Helper\UnifiedRequest::createFromGlobals();
-
         $userValidator = new UserValidator($request);
         $userValidator->validateLoginData();
 
@@ -41,6 +39,10 @@ class LoginRepository extends BaseRepository
             ->findOneBy(array(
                'email' => $request->get('email')
             ));
+
+        if (empty($user)) {
+            throw new EntityNotFoundException($request->get('email'));
+        }
 
         $this->verifyLogin($request, $user);
 
@@ -55,7 +57,7 @@ class LoginRepository extends BaseRepository
         $this->entityManager->flush();
 
         return array(
-            'authKey' => $session->getHash()
+            'sessionHash' => $session->getHash()
         );
     }
 

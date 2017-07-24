@@ -69,11 +69,12 @@ class UserValidator
      */
     private function validateEmail(EntityManagerInterface $entityManager, $userId)
     {
-        if (!$this->request->isUpdateColumn() && !$this->request->isProvided('email')) {
-            $this->badRequest->addError('email', BadRequestException::MISSING_VALUE);
-        } else {
+        if ($this->request->isProvided('email')) {
             if (!$this->checkValidEmail()) {
-                $this->badRequest->addError('email', BadRequestException::INVALID_FORMAT);
+                $this->badRequest->addError(
+                    'email',
+                    BadRequestException::INVALID_FORMAT
+                );
             } else {
                 /** @var Entity\User $otherUser */
                 $otherUser = $entityManager
@@ -83,8 +84,18 @@ class UserValidator
                     ));
 
                 if (!empty($otherUser) && $otherUser->getId() != $userId) {
-                    $this->badRequest->addError('email', BadRequestException::UNIQUE_KEY_CONSTRAINT_ERROR);
+                    $this->badRequest->addError(
+                        'email',
+                        BadRequestException::UNIQUE_KEY_CONSTRAINT_ERROR
+                    );
                 }
+            }
+        } else {
+            if (!$this->request->isUpdateColumn()) {
+                $this->badRequest->addError(
+                    'email',
+                    BadRequestException::MISSING_VALUE
+                );
             }
         }
     }
@@ -96,11 +107,17 @@ class UserValidator
     {
         if ($this->request->isProvided('password')) {
             if ($this->checkValidPassword()) {
-                $this->badRequest->addError('password', BadRequestException::INVALID_FORMAT);
+                $this->badRequest->addError(
+                    'password',
+                    BadRequestException::INVALID_FORMAT
+                );
             }
         } else {
             if ($this->request->isInsert()) {
-                $this->badRequest->addError('password', BadRequestException::MISSING_VALUE);
+                $this->badRequest->addError(
+                    'password',
+                    BadRequestException::MISSING_VALUE
+                );
             }
         }
     }
@@ -124,7 +141,10 @@ class UserValidator
             try {
                 new \DateTime((string) $this->request->get('birthDate'));
             } catch (\Exception $e) {
-                $this->badRequest->addError('birthDate', BadRequestException::INVALID_FORMAT);
+                $this->badRequest->addError(
+                    'birthDate',
+                    BadRequestException::INVALID_FORMAT
+                );
             }
         }
     }
@@ -142,6 +162,7 @@ class UserValidator
      */
     private function checkValidPassword()
     {
-        return preg_match('/^[a-f0-9]{32}$/', $this->request->get('password'));
+        return true;
+        //return preg_match('/^[a-f0-9]$/', $this->request->get('password'));
     }
 }
